@@ -354,19 +354,28 @@ def _fallback_chat_response(
                     "label": key.replace("_", " "),
                     "period": "last_7_days",
                     "value": metrics[key],
+                    "unit": None,
+                    "evidence_entry_ids": [],
                 }
             )
-    actions = [{"title": "Pick one concrete next step for tomorrow.", "priority": "medium"}]
-    if latest_user:
-        actions = [{"title": latest_user[:180], "priority": "medium"}]
+    action_title = latest_user[:180] if latest_user else "Pick one concrete next step for tomorrow."
+    actions = [{
+        "title": action_title,
+        "goal_id": str(thread["goal_id"]) if thread.get("goal_id") else None,
+        "due_date": None,
+        "priority": "medium",
+        "status": "open",
+        "rationale": None,
+    }]
 
     improvement: dict[str, Any] = {
         "title": "Tighten execution loop",
+        "goal_id": str(thread["goal_id"]) if thread.get("goal_id") else None,
         "rationale": "Translate the latest coaching point into one measurable daily action.",
+        "expected_impact": None,
+        "time_horizon_days": None,
         "priority": "medium",
     }
-    if thread.get("goal_id"):
-        improvement["goal_id"] = str(thread["goal_id"])
 
     assistant = (
         "Based on your current context, focus on one high-impact action today. "
@@ -401,38 +410,55 @@ def _fallback_distill_output(*, thread: dict[str, Any], messages: list[dict[str,
     if not evidence_rows:
         evidence_rows = [{"entry_id": f"thread-{thread['thread_id']}", "note": "thread summary"}]
 
+    goal_id = str(thread["goal_id"]) if thread.get("goal_id") else None
+
     insight: dict[str, Any] = {
         "title": lines[0][:180],
+        "goal_id": goal_id,
         "evidence": evidence_rows[:20],
         "confidence": 0.6,
     }
     improvement: dict[str, Any] = {
         "title": f"Improve: {lines[0][:120]}",
+        "goal_id": goal_id,
         "rationale": text[:600] or lines[0],
+        "success_metric": None,
+        "target_value": None,
+        "review_cadence_days": None,
         "priority": "medium",
     }
     todos: list[dict[str, Any]] = []
     for line in lines[:3]:
-        todo: dict[str, Any] = {"title": line[:190], "priority": "medium"}
-        if thread.get("goal_id"):
-            todo["goal_id"] = str(thread["goal_id"])
+        todo: dict[str, Any] = {
+            "title": line[:190],
+            "goal_id": goal_id,
+            "due_date": None,
+            "priority": "medium",
+            "status": "open",
+            "source_message_ids": [],
+            "rationale": None,
+        }
         todos.append(todo)
 
-    if thread.get("goal_id"):
-        insight["goal_id"] = str(thread["goal_id"])
-        improvement["goal_id"] = str(thread["goal_id"])
+    default_todo: dict[str, Any] = {
+        "title": "Review chat outcomes.",
+        "goal_id": goal_id,
+        "due_date": None,
+        "priority": "medium",
+        "status": "open",
+        "source_message_ids": [],
+        "rationale": None,
+    }
 
-    output: dict[str, Any] = {
+    return {
         "thread_id": thread["thread_id"],
+        "goal_id": goal_id,
         "summary": lines[0][:480],
         "insights": [insight],
         "improvements": [improvement],
-        "todos": todos or [{"title": "Review chat outcomes.", "priority": "medium"}],
+        "todos": todos or [default_todo],
         "confidence": 0.55,
     }
-    if thread.get("goal_id"):
-        output["goal_id"] = str(thread["goal_id"])
-    return output
 
 
 def generate_thread_reply(settings, *, thread_id: str) -> dict[str, Any]:

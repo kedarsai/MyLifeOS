@@ -84,10 +84,13 @@ def _build_review_output(settings, *, goal_id: str, week_start: str, week_end: s
         "steps_avg_7d": metrics.get("steps_avg_7d"),
         "steps_streak_days": metrics.get("step_streak_days"),
         "sleep_avg_min_7d": metrics.get("sleep_avg_min_7d"),
+        "weight_latest_kg": None,
+        "weight_trend_7d_kg_per_week": None,
+        "weight_trend_30d_kg_per_week": metrics.get("weight_trend_kg_30d"),
+        "activity_sleep_corr": None,
+        "sleep_weight_corr": None,
         "logging_completeness_pct": metrics.get("logging_completeness_7d_pct") or 0.0,
     }
-    if metrics.get("weight_trend_kg_30d") is not None:
-        deterministic_metrics["weight_trend_30d_kg_per_week"] = metrics["weight_trend_kg_30d"]
 
     from app.services.reminders import detect_missing_logs
 
@@ -130,11 +133,13 @@ def _build_review_output(settings, *, goal_id: str, week_start: str, week_end: s
     next_actions = [
         {
             "title": "Complete one sleep and one activity log daily.",
+            "due_date": None,
             "priority": "high" if logging_pct < 60 else "medium",
             "rationale": "Consistent logging improves signal quality for coaching.",
         },
         {
             "title": "Schedule a 15-minute nightly planning block.",
+            "due_date": None,
             "priority": "medium",
             "rationale": "Pre-commitment increases execution consistency.",
         },

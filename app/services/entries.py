@@ -130,9 +130,14 @@ def _extract_actions_from_md(actions_md: str) -> list[dict[str, Any]]:
         if not title:
             continue
         status = "done" if match.group("done").strip().lower() == "x" else "open"
-        action: dict[str, Any] = {"title": title, "priority": "medium", "status": status}
-        if due_date:
-            action["due_date"] = due_date
+        action: dict[str, Any] = {
+            "title": title,
+            "priority": "medium",
+            "status": status,
+            "due_date": due_date,
+            "goal_id": None,
+            "rationale": None,
+        }
         actions.append(action)
     return actions
 
@@ -153,9 +158,14 @@ def _todo_default_action(raw_text: str, summary: str) -> dict[str, Any]:
             break
     if len(title_source) > 200:
         title_source = title_source[:197] + "..."
-    action: dict[str, Any] = {"title": title_source or "Review task", "priority": "medium", "status": "open"}
-    if due_date:
-        action["due_date"] = due_date
+    action: dict[str, Any] = {
+        "title": title_source or "Review task",
+        "priority": "medium",
+        "status": "open",
+        "due_date": due_date,
+        "goal_id": None,
+        "rationale": None,
+    }
     return action
 
 
