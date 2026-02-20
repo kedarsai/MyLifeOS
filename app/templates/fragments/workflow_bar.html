@@ -1,0 +1,9 @@
+<nav class="workflow-bar">
+{% for href, label in steps %}
+  <a class="workflow-step{{ ' active' if href == current else '' }}" href="{{ href }}">
+    <span class="workflow-num">{{ loop.index }}</span>
+    <span class="workflow-label">{{ label }}</span>
+  </a>
+  {% if not loop.last %}<span class="workflow-arrow">&rarr;</span>{% endif %}
+{% endfor %}
+</nav>

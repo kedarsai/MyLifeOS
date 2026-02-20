@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="panel">
+      <div class="toolbar">
+        <button
+          type="button"
+          hx-get="/api/today?format=html"
+          hx-target="#today-results"
+          hx-swap="innerHTML"
+        >
+          Refresh Today
+        </button>
+      </div>
+      <div
+        id="today-results"
+        hx-get="/api/today?format=html"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      ></div>
+    </section>
+{% endblock %}

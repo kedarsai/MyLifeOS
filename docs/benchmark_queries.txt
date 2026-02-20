@@ -1,0 +1,44 @@
+# Single-term queries
+sleep
+workout
+focus
+project
+goal
+review
+ideas
+food
+journal
+chat
+
+# Multi-term queries
+morning routine
+project review
+weekly planning
+deep work block
+sleep quality
+task follow up
+meal prep
+goal progress
+focus sprint
+habit consistency
+
+# Low-selectivity terms
+the
+and
+today
+note
+update
+
+# High-selectivity terms
+zenith
+supersedes
+artifact_runs
+obs_activity
+idempotency
+
+# Facet-friendly phrases
+focus project
+sleep routine
+workout journal
+goal review
+chat summary

@@ -1,0 +1,26 @@
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<p><strong>{{ items|length }}</strong> improvements.</p>
+<div class="entry-list">
+  {% for item in items %}
+  <article class="entry-card">
+    <h4>{{ item.title }}</h4>
+    <p><code>{{ item.improvement_id }}</code></p>
+    <p><strong>Status:</strong> {{ item.status }} | <strong>Goal:</strong> {{ item.goal_id or '-' }}</p>
+    <p>{{ item.rationale }}</p>
+    <div class="toolbar">
+      <button type="button"
+        hx-patch="/api/improvements/{{ item.improvement_id }}/status?format=html"
+        hx-vals='{"status":"adopted"}'
+        hx-target="#improvements-list" hx-swap="innerHTML">Adopt</button>
+      <button type="button"
+        hx-patch="/api/improvements/{{ item.improvement_id }}/status?format=html"
+        hx-vals='{"status":"dismissed"}'
+        hx-target="#improvements-list" hx-swap="innerHTML">Dismiss</button>
+    </div>
+  </article>
+  {% else %}
+  <p>No improvements yet.</p>
+  {% endfor %}
+</div>

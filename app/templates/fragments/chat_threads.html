@@ -1,0 +1,29 @@
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<p><strong>{{ items|length }}</strong> threads.</p>
+<div class="entry-list">
+  {% for item in items %}
+  <article class="entry-card">
+    <h4>{{ item.title }}</h4>
+    <p><code>{{ item.thread_id }}</code></p>
+    <p><strong>Goal:</strong> {{ item.goal_id or '-' }}</p>
+    <div class="toolbar">
+      <button type="button"
+        onclick="var el=document.getElementById('chat-thread-id');if(el)el.value='{{ item.thread_id }}';"
+        hx-get="/api/chat/threads/{{ item.thread_id }}/messages?format=html"
+        hx-target="#chat-messages" hx-swap="innerHTML">Open</button>
+      <button type="button"
+        onclick="var el=document.getElementById('chat-thread-id');if(el)el.value='{{ item.thread_id }}';"
+        hx-post="/api/chat/threads/{{ item.thread_id }}/reply?format=html"
+        hx-target="#chat-messages" hx-swap="innerHTML">Generate Reply</button>
+      <button type="button"
+        onclick="var el=document.getElementById('chat-thread-id');if(el)el.value='{{ item.thread_id }}';"
+        hx-post="/api/chat/threads/{{ item.thread_id }}/distill?format=html"
+        hx-target="#chat-distill" hx-swap="innerHTML">Distill Outcomes</button>
+    </div>
+  </article>
+  {% else %}
+  <p>No threads.</p>
+  {% endfor %}
+</div>

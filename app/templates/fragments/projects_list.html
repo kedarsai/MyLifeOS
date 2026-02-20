@@ -1,0 +1,21 @@
+{# Projects list — expects: items, notice #}
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<p><strong>{{ items|length }}</strong> projects.</p>
+<div class="entry-list">
+  {% for item in items %}
+  <article class="entry-card">
+    <h4>{{ item.name }}</h4>
+    <p><code>{{ item.project_id }}</code></p>
+    <p><strong>Kind:</strong> {{ item.kind }} | <strong>Status:</strong> {{ item.status }}</p>
+    <p><strong>Open Tasks:</strong> {{ item.open_tasks|int }}</p>
+    <p>{{ item.notes or '-' }}</p>
+    <div class="toolbar">
+      <a class="top-link" href="/tasks?project_id={{ item.project_id }}">Open Tasks</a>
+    </div>
+  </article>
+  {% else %}
+  <p>No projects yet.</p>
+  {% endfor %}
+</div>

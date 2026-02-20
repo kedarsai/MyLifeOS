@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+    {% include "fragments/workflow_bar.html" %}
+    <div class="page-grid">
+      <section class="panel">
+        <h3>Single Capture</h3>
+        <form hx-post="/api/entries/capture?format=html" hx-target="#capture-result" hx-swap="innerHTML">
+          <div class="grid">
+            <div>
+              <label for="single-type">Type</label>
+              <select id="single-type" name="type">
+                {% for v in entry_types %}<option value="{{ v }}">{{ v }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label for="single-tags">Tags (comma-separated)</label>
+              <input id="single-tags" name="tags" placeholder="capture, quick">
+            </div>
+            <div>
+              <label for="single-goals">Goals (comma-separated IDs)</label>
+              <input id="single-goals" name="goals" placeholder="goal-1, goal-2">
+            </div>
+          </div>
+          <label for="single-raw">Raw Text</label>
+          <textarea id="single-raw" name="raw_text" required></textarea>
+          <div class="toolbar">
+            <button type="submit">Capture Entry</button>
+          </div>
+        </form>
+        <div id="capture-result"></div>
+      </section>
+      <section class="panel">
+        <h3>Batch Capture</h3>
+        <p>Parser rules: split by <code>---</code>, else by blank lines, else one line = one entry.</p>
+        <form hx-post="/api/entries/capture/batch?format=html" hx-target="#batch-result" hx-swap="innerHTML">
+          <div class="grid">
+            <div>
+              <label for="batch-type">Type</label>
+              <select id="batch-type" name="type">
+                {% for v in entry_types %}<option value="{{ v }}">{{ v }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label for="batch-tags">Tags (comma-separated)</label>
+              <input id="batch-tags" name="tags" placeholder="batch, inbox">
+            </div>
+            <div>
+              <label for="batch-goals">Goals (comma-separated IDs)</label>
+              <input id="batch-goals" name="goals" placeholder="goal-1">
+            </div>
+          </div>
+          <label for="batch-raw">Batch Raw Text</label>
+          <textarea id="batch-raw" name="raw_text" required></textarea>
+          <div class="toolbar">
+            <button type="submit">Capture Batch</button>
+          </div>
+        </form>
+        <div id="batch-result"></div>
+      </section>
+    </div>
+{% endblock %}

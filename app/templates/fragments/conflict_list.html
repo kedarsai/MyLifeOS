@@ -1,0 +1,31 @@
+<p><strong>{{ total }}</strong> conflicts.</p>
+<div class="entry-list">
+  {% for item in items %}
+  <article class="entry-card">
+    <h4>{{ item.conflict_id }}</h4>
+    <p><strong>Status:</strong> {{ item.conflict_status }}</p>
+    <p><strong>Entity:</strong> {{ item.entity_type }} / <code>{{ item.entity_id }}</code></p>
+    <p><strong>Created:</strong> {{ item.created_at }}</p>
+    <p>{{ item.summary }}</p>
+    <div class="toolbar">
+      <button type="button"
+        hx-get="/api/conflicts/{{ item.conflict_id }}?format=html"
+        hx-target="#conflict-detail" hx-swap="innerHTML">Open</button>
+    </div>
+  </article>
+  {% else %}
+  <p>No conflicts found for this filter.</p>
+  {% endfor %}
+</div>
+<div class="pager">
+  {% if offset > 0 %}
+  <button type="button"
+    hx-get="/api/conflicts?format=html&limit={{ limit }}&offset={{ [0, offset - limit]|max }}"
+    hx-target="#conflicts-list" hx-swap="innerHTML">Previous</button>
+  {% endif %}
+  {% if offset + limit < total %}
+  <button type="button"
+    hx-get="/api/conflicts?format=html&limit={{ limit }}&offset={{ offset + limit }}"
+    hx-target="#conflicts-list" hx-swap="innerHTML">Next</button>
+  {% endif %}
+</div>

@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifeos.local/schemas/goal_chat_response.json",
+  "title": "Goal Chat Response",
+  "description": "Structured response from goal chat before rendering assistant text and derived actions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assistant_message",
+    "referenced_data_points",
+    "detected_gaps",
+    "suggested_actions",
+    "recommended_improvements",
+    "needs_followup",
+    "followup_questions",
+    "confidence"
+  ],
+  "properties": {
+    "assistant_message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "referenced_data_points": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dataPoint"
+      },
+      "maxItems": 30
+    },
+    "detected_gaps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dataGap"
+      },
+      "maxItems": 20
+    },
+    "suggested_actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/taskAction"
+      },
+      "maxItems": 15
+    },
+    "recommended_improvements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/improvement"
+      },
+      "maxItems": 10
+    },
+    "needs_followup": {
+      "type": "boolean"
+    },
+    "followup_questions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 240
+      },
+      "maxItems": 8
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "needs_followup": {
+            "const": true
+          }
+        },
+        "required": [
+          "needs_followup"
+        ]
+      },
+      "then": {
+        "properties": {
+          "followup_questions": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "dataPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric",
+        "label",
+        "period",
+        "value"
+      ],
+      "properties": {
+        "metric": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "period": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "boolean"
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "evidence_entry_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 20
+        }
+      }
+    },
+    "dataGap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric",
+        "question"
+      ],
+      "properties": {
+        "metric": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      }
+    },
+    "taskAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "priority"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "due_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "in_progress",
+            "done",
+            "cancelled"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "improvement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "rationale",
+        "priority"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "expected_impact": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "time_horizon_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      }
+    }
+  }
+}

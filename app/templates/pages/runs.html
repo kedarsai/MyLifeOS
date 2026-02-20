@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="panel">
+      <form
+        id="runs-filters"
+        hx-get="/api/runs"
+        hx-target="#runs-list"
+        hx-swap="innerHTML"
+      >
+        <input type="hidden" name="format" value="html">
+        <input type="hidden" name="offset" value="0">
+        <div class="grid">
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="">all</option>
+              <option value="pending">pending</option>
+              <option value="success">success</option>
+              <option value="failed">failed</option>
+            </select>
+          </div>
+          <div>
+            <label for="prompt_id">Prompt ID</label>
+            <input id="prompt_id" name="prompt_id" placeholder="ingest_extract">
+          </div>
+          <div>
+            <label for="limit">Limit</label>
+            <input id="limit" name="limit" type="number" min="1" max="500" value="100">
+          </div>
+        </div>
+        <div class="toolbar">
+          <button type="submit">Apply Filters</button>
+          <button
+            type="button"
+            hx-get="/api/runs?format=html&limit=100&offset=0"
+            hx-target="#runs-list"
+            hx-swap="innerHTML"
+          >
+            Reset
+          </button>
+        </div>
+      </form>
+    </section>
+    <div class="split-pane">
+      <div class="split-left">
+        <section class="panel">
+          <h3>Run History</h3>
+          <div
+            id="runs-list"
+            hx-get="/api/runs?format=html&limit=100&offset=0"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+          ></div>
+        </section>
+      </div>
+      <div class="split-right">
+        <section class="panel">
+          <h3>Run Detail</h3>
+          <div id="run-detail">
+            <p>Select a run to inspect output, parse status, and errors.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+{% endblock %}

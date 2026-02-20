@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="panel">
+      <form
+        id="conflict-filters"
+        hx-get="/api/conflicts"
+        hx-target="#conflicts-list"
+        hx-swap="innerHTML"
+      >
+        <input type="hidden" name="format" value="html">
+        <input type="hidden" name="offset" value="0">
+        <div class="grid">
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="open">open</option>
+              <option value="resolved">resolved</option>
+              <option value="all">all</option>
+            </select>
+          </div>
+          <div>
+            <label for="entity_type">Entity Type</label>
+            <input id="entity_type" name="entity_type" placeholder="entry">
+          </div>
+          <div>
+            <label for="date_from">From (YYYY-MM-DD)</label>
+            <input id="date_from" name="date_from">
+          </div>
+          <div>
+            <label for="date_to">To (YYYY-MM-DD)</label>
+            <input id="date_to" name="date_to">
+          </div>
+          <div>
+            <label for="limit">Limit</label>
+            <input id="limit" name="limit" type="number" min="1" max="200" value="50">
+          </div>
+        </div>
+        <div class="toolbar">
+          <button type="submit">Apply Filters</button>
+          <button
+            type="button"
+            hx-get="/api/conflicts?format=html&status=open&limit=50&offset=0"
+            hx-target="#conflicts-list"
+            hx-swap="innerHTML"
+          >
+            Reset
+          </button>
+        </div>
+      </form>
+    </section>
+    <div class="split-pane">
+      <div class="split-left">
+        <section class="panel">
+          <h3>Queue</h3>
+          <div
+            id="conflicts-list"
+            hx-get="/api/conflicts?format=html&status=open&limit=50&offset=0"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+          ></div>
+        </section>
+      </div>
+      <div class="split-right">
+        <section class="panel">
+          <h3>Conflict Detail</h3>
+          <div id="conflict-detail">
+            <p>Select a conflict from the queue to view side-by-side versions and resolve it.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+{% endblock %}

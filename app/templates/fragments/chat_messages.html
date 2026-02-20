@@ -1,0 +1,13 @@
+<p><strong>{{ messages|length }}</strong> messages.</p>
+<div class="entry-list">
+  {% for msg in messages %}
+  <article class="entry-card">
+    <h4>{{ msg.role }}</h4>
+    <p><code>{{ msg.message_id }}</code></p>
+    <p>{{ msg.content }}</p>
+    <p><strong>At:</strong> {{ msg.created_at }}</p>
+  </article>
+  {% else %}
+  <p>No messages.</p>
+  {% endfor %}
+</div>

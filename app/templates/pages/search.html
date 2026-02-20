@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="panel">
+      <form
+        hx-get="/api/search"
+        hx-target="#search-results"
+        hx-swap="innerHTML"
+      >
+        <input type="hidden" name="format" value="html">
+        <input type="hidden" name="page" value="1">
+        <div class="grid">
+          <div>
+            <label for="q">Query</label>
+            <input id="q" name="q" placeholder="sleep, workout, focus..." required>
+          </div>
+          <div>
+            <label for="type">Type</label>
+            <select id="type" name="type">
+              <option value="">all</option>
+              {% for v in entry_types %}<option value="{{ v }}">{{ v }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="tag">Tag</label>
+            <input id="tag" name="tag" placeholder="capture">
+          </div>
+          <div>
+            <label for="goal">Goal ID</label>
+            <input id="goal" name="goal" placeholder="goal-1">
+          </div>
+          <div>
+            <label for="page_size">Page Size</label>
+            <input id="page_size" name="page_size" type="number" min="1" max="100" value="20">
+          </div>
+        </div>
+        <div class="toolbar">
+          <button type="submit">Search</button>
+        </div>
+      </form>
+    </section>
+    <section class="panel">
+      <div id="search-results">
+        <p>Run a query to view FTS results and facets.</p>
+      </div>
+    </section>
+{% endblock %}

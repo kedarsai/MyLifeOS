@@ -1,0 +1,49 @@
+{# Goal dashboard — expects: item (with goal, metrics, latest_review) #}
+{% set goal = item.goal %}
+{% set metrics = item.metrics %}
+{% set latest_review = item.latest_review %}
+{% set cards = [
+  ('Steps Avg (7d)', metrics.steps_avg_7d),
+  ('Step Streak', metrics.step_streak_days),
+  ('Sleep Avg Min (7d)', metrics.sleep_avg_min_7d),
+  ('Weight Trend kg (30d)', metrics.weight_trend_kg_30d),
+  ('Logging Completeness', (metrics.logging_completeness_7d_pct|string ~ '%')),
+  ('Linked Entries', metrics.linked_entries),
+] %}
+<section class="panel">
+  <h3>{{ goal.name }}</h3>
+  <p><code>{{ goal.goal_id }}</code> | {{ goal.status }}</p>
+  <div class="stat-grid">
+    {% for label, value in cards %}
+    <div class="stat">
+      <span class="muted">{{ label }}</span>
+      <b>{{ value if value is not none else '-' }}</b>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="toolbar">
+    <button type="button"
+      hx-post="/api/reviews/generate?format=html"
+      hx-vals='{"goal_id":"{{ goal.goal_id }}"}'
+      hx-target="#goal-dashboard-review" hx-swap="innerHTML">Generate Weekly Review</button>
+  </div>
+  <div id="goal-dashboard-review">
+    {% if latest_review %}
+    {% set review = latest_review.review or {} %}
+    <div class="panel" style="margin-top:10px;">
+      <p><strong>Latest Review:</strong> {{ latest_review.week_start }} to {{ latest_review.week_end }}</p>
+      {% set actions = review.next_best_actions or [] %}
+      {% if actions %}
+      <p><strong>Recommended Actions</strong></p>
+      <ul>
+        {% for action in actions[:3] %}
+        <li>{{ action.title or '-' }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted">No weekly review generated yet.</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>

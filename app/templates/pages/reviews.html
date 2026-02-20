@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+    {% include "fragments/workflow_bar.html" %}
+    <section class="panel">
+      <h3>Generate Weekly Review</h3>
+      <form hx-post="/api/reviews/generate?format=html" hx-target="#reviews-list" hx-swap="innerHTML">
+        <div class="grid">
+          <div>
+            <label for="reviews-goal-id">Goal</label>
+            <select id="reviews-goal-id" name="goal_id">
+              {% if goals %}
+                {% for g in goals %}<option value="{{ g.goal_id }}">{{ g.name }}</option>
+                {% endfor %}
+              {% else %}
+                <option value="">-- no goals --</option>
+              {% endif %}
+            </select>
+          </div>
+          <div>
+            <label for="reviews-week-start">Week Start (optional YYYY-MM-DD)</label>
+            <input id="reviews-week-start" name="week_start" placeholder="2026-02-16">
+          </div>
+        </div>
+        <div class="toolbar">
+          <button type="submit">Generate Review</button>
+          <button
+            type="button"
+            hx-get="/api/reviews?format=html"
+            hx-target="#reviews-list"
+            hx-swap="innerHTML"
+          >
+            Refresh
+          </button>
+        </div>
+      </form>
+    </section>
+    <section class="panel">
+      <div
+        id="reviews-list"
+        hx-get="/api/reviews?format=html"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      ></div>
+    </section>
+{% endblock %}

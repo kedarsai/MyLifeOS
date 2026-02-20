@@ -1,0 +1,6 @@
+{# Tasks list with count — expects: items, total, qs, project_options, notice #}
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<p><strong>{{ total }}</strong> tasks.</p>
+{% include "fragments/task_grid.html" with context %}

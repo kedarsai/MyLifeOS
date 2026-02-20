@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="panel">
+      <h3>LLM Configuration</h3>
+      <div
+        id="llm-config"
+        hx-get="/api/prompts/llm-config?format=html"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      >
+        <p>Loading LLM settings...</p>
+      </div>
+    </section>
+    <section class="panel">
+      <h3>Prompt Editor</h3>
+      <div
+        id="prompt-editor"
+        hx-get="/api/prompts/editor?format=html"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      >
+        <p>Loading prompt editor...</p>
+      </div>
+    </section>
+    <section class="panel">
+      <p>Loads YAML files from <code>Vault/config/prompts</code> into <code>prompt_templates</code>.</p>
+      <div class="toolbar">
+        <button
+          type="button"
+          hx-post="/api/prompts/reload?format=html"
+          hx-target="#prompt-list"
+          hx-swap="innerHTML"
+        >
+          Reload Prompts
+        </button>
+        <button
+          type="button"
+          hx-get="/api/prompts?format=html&limit=200&offset=0"
+          hx-target="#prompt-list"
+          hx-swap="innerHTML"
+        >
+          Refresh List
+        </button>
+      </div>
+    </section>
+    <section class="panel">
+      <div
+        id="prompt-list"
+        hx-get="/api/prompts?format=html&limit=200&offset=0"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      ></div>
+    </section>
+{% endblock %}

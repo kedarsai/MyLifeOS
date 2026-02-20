@@ -1,0 +1,37 @@
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<p><strong>{{ total }}</strong> inbox entries.</p>
+<div class="entry-list">
+  {% for item in items %}
+  <article class="entry-card">
+    <label class="entry-select">
+      <input type="checkbox" name="entry_ids" value="{{ item.id }}">
+      <span>Select</span>
+    </label>
+    <h4>{{ item.summary or '(no summary)' }}</h4>
+    <p><code>{{ item.id }}</code> | {{ item.created_at }}</p>
+    <p><strong>Type:</strong> {{ item.type }} | <strong>Tags:</strong> {{ item.tags|join(', ') or '-' }} | <strong>Goals:</strong> {{ item.goals|join(', ') or '-' }}</p>
+    <p>{{ item.raw_text|truncate_text(180) }}</p>
+  </article>
+  {% else %}
+  <p>No inbox items.</p>
+  {% endfor %}
+</div>
+<div class="pager">
+  {% if offset > 0 %}
+  <button type="button"
+    hx-get="/api/entries/inbox?format=html&limit={{ limit }}&offset={{ [0, offset - limit]|max }}"
+    hx-target="#inbox-results" hx-swap="innerHTML">Previous</button>
+  {% endif %}
+  {% if offset + limit < total %}
+  <button type="button"
+    hx-get="/api/entries/inbox?format=html&limit={{ limit }}&offset={{ offset + limit }}"
+    hx-target="#inbox-results" hx-swap="innerHTML">Next</button>
+  {% endif %}
+</div>
+{% if notice and total == 0 %}
+<div class="nudge">
+  View processed entries in <a href="/timeline">Timeline &rarr;</a>
+</div>
+{% endif %}

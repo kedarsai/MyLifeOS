@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+    {% include "fragments/workflow_bar.html" %}
+    <section class="panel">
+      <form
+        id="timeline-filters"
+        hx-get="/api/entries/timeline"
+        hx-target="#timeline-results"
+        hx-swap="innerHTML"
+      >
+        <input type="hidden" name="format" value="html">
+        <input type="hidden" name="page" value="1">
+        <div class="grid">
+          <div>
+            <label for="type">Type</label>
+            <select id="type" name="type">
+              <option value="">all</option>
+              {% for v in entry_types %}<option value="{{ v }}">{{ v }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="tag">Tag</label>
+            <input id="tag" name="tag" placeholder="capture">
+          </div>
+          <div>
+            <label for="goal">Goal</label>
+            <select id="goal" name="goal">
+              <option value="">all</option>
+              {% for g in goals %}<option value="{{ g.goal_id }}">{{ g.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="date_from">From (YYYY-MM-DD)</label>
+            <input id="date_from" name="date_from" placeholder="2026-02-01">
+          </div>
+          <div>
+            <label for="date_to">To (YYYY-MM-DD)</label>
+            <input id="date_to" name="date_to" placeholder="2026-02-29">
+          </div>
+          <div>
+            <label for="page_size">Page Size</label>
+            <input id="page_size" name="page_size" value="20" type="number" min="1" max="100">
+          </div>
+        </div>
+        <div class="toolbar">
+          <button type="submit">Apply Filters</button>
+        </div>
+      </form>
+      <div
+        id="timeline-results"
+        hx-get="/api/entries/timeline?format=html&page=1&page_size=20"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      ></div>
+    </section>
+{% endblock %}

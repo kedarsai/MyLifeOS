@@ -1,0 +1,17 @@
+{% if not items %}
+<div class="result warning">No entries captured.</div>
+{% else %}
+<div class="result success">
+  <strong>Captured {{ items|length }} entries.</strong>
+  <ul>
+    {% for item in items %}
+    <li>{{ item.created }} | {{ item.entry_id }} | {{ item.path }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% if inbox_count > 0 %}
+<div class="nudge">
+  {{ inbox_count }} items in inbox &rarr; <a href="/inbox">Process now</a>
+</div>
+{% endif %}
+{% endif %}

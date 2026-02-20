@@ -1,0 +1,13 @@
+{# Goals list — expects: items, notice #}
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<p><strong>{{ items|length }}</strong> goals.</p>
+<div class="entry-list">
+  {% for item in items %}
+  {% include "fragments/goal_item.html" %}
+  {% endfor %}
+  {% if not items %}
+  <p>No goals yet.</p>
+  {% endif %}
+</div>

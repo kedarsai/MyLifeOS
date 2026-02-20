@@ -1,0 +1,20 @@
+{# Reviews list — expects: items, notice #}
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<p><strong>{{ items|length }}</strong> weekly reviews.</p>
+<div class="entry-list">
+  {% for item in items %}
+  {% set review = item.review %}
+  {% set top_action = review.next_best_actions[0].title if review.next_best_actions else '-' %}
+  <article class="entry-card">
+    <h4>{{ item.goal_id }}: {{ item.week_start }} to {{ item.week_end }}</h4>
+    <p><code>{{ item.review_id }}</code></p>
+    <p><strong>Risk:</strong> {{ review.risk_level or '-' }} | <strong>Confidence:</strong> {{ review.confidence or '-' }}</p>
+    <p><strong>Top Next Action:</strong> {{ top_action }}</p>
+    <p><small>{{ item.path }}</small></p>
+  </article>
+  {% else %}
+  <p>No reviews yet.</p>
+  {% endfor %}
+</div>

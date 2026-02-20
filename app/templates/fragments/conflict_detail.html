@@ -1,0 +1,43 @@
+<h3>Conflict {{ item.conflict_id }}</h3>
+<p><strong>Status:</strong> {{ item.conflict_status }}</p>
+<p><strong>Entity:</strong> {{ item.entity_type }} / <code>{{ item.entity_id }}</code></p>
+<p><strong>Path:</strong> <code>{{ item.path }}</code></p>
+<p><strong>Created:</strong> {{ item.created_at }}</p>
+<p><strong>Resolved:</strong> {{ item.resolved_at or '-' }}</p>
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+{% set disabled = 'disabled' if item.conflict_status != 'open' else '' %}
+<div class="toolbar">
+  <button {{ disabled }}
+    hx-post="/api/conflicts/{{ item.conflict_id }}/resolve?format=html"
+    hx-vals='{"action":"keep_vault","actor":"local_user"}'
+    hx-target="#conflict-detail" hx-swap="innerHTML"
+    hx-on::after-request="htmx.ajax('GET','/api/conflicts?format=html',{target:'#conflicts-list',swap:'innerHTML'});htmx.ajax('GET','/api/conflicts/badge?format=html',{target:'#conflict-badge',swap:'innerHTML'});">Keep Vault</button>
+  <button {{ disabled }}
+    hx-post="/api/conflicts/{{ item.conflict_id }}/resolve?format=html"
+    hx-vals='{"action":"keep_app","actor":"local_user"}'
+    hx-target="#conflict-detail" hx-swap="innerHTML"
+    hx-on::after-request="htmx.ajax('GET','/api/conflicts?format=html',{target:'#conflicts-list',swap:'innerHTML'});htmx.ajax('GET','/api/conflicts/badge?format=html',{target:'#conflict-badge',swap:'innerHTML'});">Keep App</button>
+  <button {{ disabled }}
+    hx-post="/api/conflicts/{{ item.conflict_id }}/resolve?format=html"
+    hx-vals='{"action":"merge","actor":"local_user"}'
+    hx-target="#conflict-detail" hx-swap="innerHTML"
+    hx-on::after-request="htmx.ajax('GET','/api/conflicts?format=html',{target:'#conflicts-list',swap:'innerHTML'});htmx.ajax('GET','/api/conflicts/badge?format=html',{target:'#conflict-badge',swap:'innerHTML'});">Merge</button>
+</div>
+<div class="diff-grid">
+  <section><h4>Vault Version</h4>
+  <pre>{{ item.vault_text or '' }}</pre></section>
+  <section><h4>App Version</h4>
+  <pre>{{ item.app_text or '' }}</pre></section>
+</div>
+<h4>Unified Diff</h4>
+<pre>{{ item.diff_text or '' }}</pre>
+<h4>Audit Events</h4>
+<ul>
+  {% for event in item.events or [] %}
+  <li>{{ event.created_at }} | {{ event.action }} | {{ event.actor }}</li>
+  {% else %}
+  <li>No events.</li>
+  {% endfor %}
+</ul>

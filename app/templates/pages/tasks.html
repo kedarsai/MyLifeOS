@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+    {% include "fragments/workflow_bar.html" %}
+    <section class="panel">
+      <h3>Task Filters</h3>
+      <form
+        id="tasks-filter-form"
+        hx-get="/api/tasks"
+        hx-target="#tasks-results"
+        hx-swap="innerHTML"
+      >
+        <input type="hidden" name="format" value="html">
+        <div class="grid">
+          <div>
+            <label for="tasks-q">Search</label>
+            <input id="tasks-q" name="q" value="{{ q or '' }}" placeholder="keyword in title/rationale">
+          </div>
+          <div>
+            <label for="tasks-goal-id">Goal</label>
+            <select id="tasks-goal-id" name="goal_id">
+              <option value="">all</option>
+              {% for g in goals %}
+              <option value="{{ g.goal_id }}"{{ ' selected' if goal_id == g.goal_id else '' }}>{{ g.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="tasks-project-id">Project</label>
+            <select id="tasks-project-id" name="project_id">
+              <option value="">all</option>
+              {% for p in projects %}
+              <option value="{{ p.project_id }}"{{ ' selected' if project_id == p.project_id else '' }}>{{ p.name }} ({{ p.kind }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="tasks-status">Status</label>
+            <select id="tasks-status" name="status">
+              {% for value, label in [('', 'all'), ('open', 'open'), ('in_progress', 'in_progress'), ('done', 'done'), ('cancelled', 'cancelled')] %}
+              <option value="{{ value }}"{{ ' selected' if (status or '') == value else '' }}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="tasks-limit">Limit</label>
+            <input id="tasks-limit" name="limit" type="number" min="1" max="1000" value="{{ limit }}">
+          </div>
+          <div>
+            <label for="tasks-include-done">Include done/cancelled</label>
+            <input id="tasks-include-done" name="include_done" type="checkbox" value="1"{{ ' checked' if include_done else '' }}>
+          </div>
+        </div>
+        <div class="toolbar">
+          <button type="submit">Apply Filters</button>
+          <a class="top-link" href="/tasks">Reset</a>
+          <button
+            type="button"
+            hx-get="/api/today?format=html"
+            hx-target="#tasks-today"
+            hx-swap="innerHTML"
+          >
+            Today ({{ today_label }})
+          </button>
+        </div>
+      </form>
+    </section>
+    <section class="panel">
+      <h3>Today Snapshot</h3>
+      <div id="tasks-today"><p>Click <strong>Today</strong> to load due/overdue tasks.</p></div>
+    </section>
+    <section class="panel">
+      <div
+        id="tasks-results"
+        hx-get="/api/tasks?{{ initial_qs }}"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      ></div>
+    </section>
+{% endblock %}

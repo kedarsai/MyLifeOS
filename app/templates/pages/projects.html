@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="panel">
+      <h3>Create Project</h3>
+      <form hx-post="/api/projects?format=html" hx-target="#projects-list" hx-swap="innerHTML">
+        <div class="grid">
+          <div>
+            <label for="project-name">Name</label>
+            <input id="project-name" name="name" required placeholder="Client website revamp">
+          </div>
+          <div>
+            <label for="project-kind">Kind</label>
+            <select id="project-kind" name="kind">
+              <option value="client">client</option>
+              <option value="personal">personal</option>
+              <option value="internal">internal</option>
+              <option value="other">other</option>
+            </select>
+          </div>
+          <div>
+            <label for="project-status">Status</label>
+            <select id="project-status" name="status">
+              <option value="active">active</option>
+              <option value="paused">paused</option>
+              <option value="completed">completed</option>
+              <option value="archived">archived</option>
+            </select>
+          </div>
+        </div>
+        <label for="project-notes">Notes</label>
+        <textarea id="project-notes" name="notes" placeholder="Scope, deadlines, context..."></textarea>
+        <div class="toolbar">
+          <button type="submit">Create Project</button>
+        </div>
+      </form>
+    </section>
+    <section class="panel">
+      <div
+        id="projects-list"
+        hx-get="/api/projects?format=html"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      ></div>
+    </section>
+{% endblock %}

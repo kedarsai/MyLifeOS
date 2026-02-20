@@ -1,0 +1,66 @@
+{# Dashboard summary: stats, action cards, recent entries #}
+<div class="stat-grid">
+  <div class="stat"><span class="muted">Inbox</span><b>{{ entries.inbox }}</b></div>
+  <div class="stat"><span class="muted">Tasks Due</span><b>{{ tasks_due }}</b></div>
+  <div class="stat"><span class="muted">Due Today</span><b>{{ tasks_due_today }}</b></div>
+  <div class="stat"><span class="muted">Open Thoughts</span><b>{{ open_thoughts }}</b></div>
+  <div class="stat"><span class="muted">Run Failures</span><b>{{ runs.failed }}</b></div>
+</div>
+
+<div class="action-cards">
+  {% if entries.inbox > 0 %}
+  <a class="action-card" href="/inbox"><b>{{ entries.inbox }}</b> inbox &rarr; Process</a>
+  {% endif %}
+  {% if tasks_due_today > 0 %}
+  <a class="action-card" href="/today"><b>{{ tasks_due_today }}</b> due today &rarr; View</a>
+  {% endif %}
+  {% if runs.failed > 0 %}
+  <a class="action-card alert" href="/runs?status=failed"><b>{{ runs.failed }}</b> failed &rarr; Fix</a>
+  {% endif %}
+  <a class="action-card" href="/capture?autofocus=1"><b>+</b> Capture</a>
+</div>
+
+<section class="panel panel-entries" style="margin-top:14px;">
+  <h3>Recent Entries</h3>
+  <div class="entry-list">
+    {% for entry in recent_entries %}
+    {% set etype = entry.type or 'note' %}
+    {% set estatus = entry.status or 'inbox' %}
+    {% set summary_text = entry.summary or '' %}
+    {% set raw_text = entry.raw_text or '' %}
+    {% set display_summary = summary_text or (raw_text|truncate_text(120)) or '(empty)' %}
+    {% set raw_preview = raw_text|truncate_text(500) %}
+    {% set type_cls = type_classes.get(etype, 'type-note') %}
+    {% set bulb_cls = bulb_map.get(estatus, 'bulb-yellow') %}
+    {% set status_cls = status_cls_map.get(estatus, 'sb-inbox') %}
+    {% set status_label = status_label_map.get(estatus, estatus) %}
+    {% set time_ago = (entry.created_at or '')|time_ago %}
+    <article class="dash-entry" onclick="this.classList.toggle('expanded')">
+      <div class="dash-bulb {{ bulb_cls }}" title="{{ estatus }}"></div>
+      <div class="dash-entry-body">
+        <h4>{{ display_summary }}</h4>
+        <p class="dash-entry-meta">{{ time_ago }}</p>
+      </div>
+      <div class="dash-entry-right">
+        <span class="type-badge {{ type_cls }}">{{ etype }}</span>
+        <span class="status-badge-sm {{ status_cls }}">{{ status_label }}</span>
+      </div>
+      <div class="dash-entry-detail">
+        <p>{{ raw_preview }}</p>
+        {% if estatus == 'inbox' %}
+        <div class="toolbar">
+          <button type="button"
+            hx-post="/api/entries/process-inbox?format=html"
+            hx-vals='{"entry_ids":"{{ entry.id }}","limit":1}'
+            hx-target="#dashboard-summary"
+            hx-swap="innerHTML"
+            onclick="event.stopPropagation()">Process This Entry</button>
+        </div>
+        {% endif %}
+      </div>
+    </article>
+    {% else %}
+    <p class="muted">No entries yet.</p>
+    {% endfor %}
+  </div>
+</section>

@@ -1,0 +1,21 @@
+{# Single goal card — expects: item #}
+{% set gid = item.goal_id %}
+<article class="entry-card">
+  <h4>{{ item.name }}</h4>
+  <p><code>{{ gid }}</code></p>
+  <p><strong>Status:</strong> {{ item.status }} | <strong>Dates:</strong> {{ item.start_date }} -> {{ item.end_date or '-' }}</p>
+  <p><strong>Metrics:</strong> <code>{{ item.metrics|tojson }}</code></p>
+  <div class="toolbar">
+    <button type="button" onclick="if(typeof loadGoalHub==='function')loadGoalHub('{{ gid }}');"
+      hx-get="/api/goals/{{ gid }}/dashboard?format=html"
+      hx-target="#goal-dashboard" hx-swap="innerHTML">Hub</button>
+    <button type="button" hx-get="/api/tasks?format=html&goal_id={{ gid }}"
+      hx-target="#goal-hub-tasks" hx-swap="innerHTML">Tasks</button>
+    <button type="button" hx-get="/api/reviews?format=html&goal_id={{ gid }}"
+      hx-target="#goal-hub-reviews" hx-swap="innerHTML">Reviews</button>
+    <button type="button" hx-get="/api/improvements?format=html&goal_id={{ gid }}"
+      hx-target="#goal-hub-improvements" hx-swap="innerHTML">Improvements</button>
+    <button type="button" hx-get="/api/chat/threads?format=html&goal_id={{ gid }}"
+      hx-target="#goal-hub-chat" hx-swap="innerHTML">Chat</button>
+  </div>
+</article>

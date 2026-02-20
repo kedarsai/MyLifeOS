@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body data-layout="{{ layout }}">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <h2>LifeOS</h2>
+        <p>Local-first assistant</p>
+      </div>
+      <button id="sidebar-toggle-btn" class="sidebar-toggle" type="button">&#9776; Toggle</button>
+      <nav class="nav">
+        {% for section_name, links in nav_groups %}
+        <details class="nav-group"{% if active in links|map(attribute=0)|list %} open{% endif %}>
+          <summary>{{ section_name }}</summary>
+          <div class="nav-group-links">
+            {% for href, label in links %}
+            <a class="nav-link{{ ' active' if href == active else '' }}" href="{{ href }}">
+              <span class="nav-icon">{{ nav_icons.get(href, '&#8226;')|safe }}</span>
+              <span class="nav-label">{{ label }}</span>
+            </a>
+            {% endfor %}
+          </div>
+        </details>
+        {% endfor %}
+      </nav>
+      <span id="conflict-badge"
+        hx-get="/api/conflicts/badge?format=html"
+        hx-trigger="load"
+        hx-swap="innerHTML">
+        <a class="badge ok" href="/conflicts">Conflicts (0)</a>
+      </span>
+    </aside>
+    <main class="content">
+      <div class="page-head">
+        <div class="page-head-row">
+          <h1>{{ display_title }}</h1>
+          <div class="top-links">
+            <a class="top-link primary" href="/capture?autofocus=1">Quick Capture</a>
+            <a class="top-link" href="/search">Search</a>
+            <a class="top-link" href="/api/health">API Health</a>
+          </div>
+        </div>
+        <div class="quick-tabs">
+          {% for href, label in primary_tabs %}
+          <a class="quick-tab{{ ' active' if href == active else '' }}" href="{{ href }}">{{ label }}</a>
+          {% endfor %}
+        </div>
+      </div>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script src="/static/app.js"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

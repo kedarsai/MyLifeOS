@@ -1,0 +1,26 @@
+{# Task grid table — expects: items, qs, project_options, target_id, view, empty_text #}
+{% if not items %}
+<p>{{ empty_text }}</p>
+{% else %}
+<div class="task-grid-wrap">
+  <table class="task-grid">
+    <thead><tr>
+      <th>Task</th>
+      <th>Status</th>
+      <th>Priority</th>
+      <th>Due</th>
+      <th>Goal</th>
+      <th>Project</th>
+      <th>Updated</th>
+      <th>Complete</th>
+      <th>Delete</th>
+      <th>Details</th>
+    </tr></thead>
+    <tbody>
+      {% for item in items %}
+      {% include "fragments/task_row.html" %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}

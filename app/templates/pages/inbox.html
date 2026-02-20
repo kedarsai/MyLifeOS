@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+    {% include "fragments/workflow_bar.html" %}
+    <section class="panel">
+      <form
+        hx-post="/api/entries/process-inbox?format=html"
+        hx-target="#inbox-results"
+        hx-swap="innerHTML"
+      >
+        <input type="hidden" name="limit" value="50">
+        <div class="toolbar">
+          <button type="submit">Process Selected</button>
+          <button
+            type="button"
+            hx-post="/api/entries/process-inbox?format=html"
+            hx-vals='{"limit": 50}'
+            hx-target="#inbox-results"
+            hx-swap="innerHTML"
+          >
+            Process Top 50
+          </button>
+          <button
+            type="button"
+            hx-get="/api/entries/inbox?format=html&limit=50&offset=0"
+            hx-target="#inbox-results"
+            hx-swap="innerHTML"
+          >
+            Refresh
+          </button>
+        </div>
+        <div
+          id="inbox-results"
+          hx-get="/api/entries/inbox?format=html&limit=50&offset=0"
+          hx-trigger="load"
+          hx-swap="innerHTML"
+        ></div>
+      </form>
+    </section>
+{% endblock %}

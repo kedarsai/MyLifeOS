@@ -1,0 +1,18 @@
+<p><strong>{{ total }}</strong> runs.</p>
+<div class="entry-list">
+  {% for item in items %}
+  <article class="entry-card">
+    <h4>{{ item.prompt_id }}@{{ item.prompt_version }}</h4>
+    <p><code>{{ item.run_id }}</code></p>
+    <p><strong>Status:</strong> {{ item.status }} | <strong>parse_ok:</strong> {{ item.parse_ok|string|lower }}</p>
+    <p><strong>Created:</strong> {{ item.created_at }}</p>
+    <div class="toolbar">
+      <button type="button"
+        hx-get="/api/runs/{{ item.run_id }}?format=html"
+        hx-target="#run-detail" hx-swap="innerHTML">Open</button>
+    </div>
+  </article>
+  {% else %}
+  <p>No runs found.</p>
+  {% endfor %}
+</div>

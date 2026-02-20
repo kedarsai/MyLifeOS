@@ -1,0 +1,37 @@
+{# Reminders summary — expects: data, notice #}
+{% set counts = data.counts %}
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<div class="stat-grid">
+  {% for label, key in [('Missing Logs', 'missing_logs'), ('Open Conflicts', 'open_conflicts'), ('Failed Runs', 'failed_runs'), ('Stale Improvements', 'stale_improvements'), ('Due Reviews', 'due_reviews')] %}
+  <div class="stat">
+    <span class="muted">{{ label }}</span><b>{{ counts.get(key, 0) }}</b>
+  </div>
+  {% endfor %}
+</div>
+<h3>Missing Logs</h3>
+<div class="entry-list">
+  {% for item in data.missing_logs[:50] %}
+  <article class="entry-card">
+    <h4>{{ item.goal_name }}</h4>
+    <p><strong>Date:</strong> {{ item.date }}</p>
+    <p><strong>Missing:</strong> {{ item.missing_types|join(', ') }}</p>
+  </article>
+  {% else %}
+  <p>No missing logs detected.</p>
+  {% endfor %}
+</div>
+<h3>Due Weekly Reviews</h3>
+<div class="entry-list">
+  {% for item in (data.due_reviews or [])[:30] %}
+  {% set days_text = 'never' if item.days_since_review is none else item.days_since_review|string %}
+  <article class="entry-card">
+    <h4>{{ item.goal_name }}</h4>
+    <p><code>{{ item.goal_id }}</code></p>
+    <p><strong>Days Since Last Review:</strong> {{ days_text }}</p>
+  </article>
+  {% else %}
+  <p>No goal reviews currently due.</p>
+  {% endfor %}
+</div>

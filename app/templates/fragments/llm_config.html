@@ -1,0 +1,51 @@
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<div class="toolbar">
+  {% if cfg.openai_api_key_configured %}
+  <span class="badge ok">OPENAI_API_KEY configured</span>
+  {% else %}
+  <span class="badge alert">OPENAI_API_KEY missing</span>
+  {% endif %}
+</div>
+{% if cfg.openai_api_key_configured %}
+<p><strong>API key preview:</strong> <code>{{ cfg.openai_api_key_preview }}</code></p>
+{% else %}
+<p><strong>API key preview:</strong> <code>not set</code></p>
+{% endif %}
+<form hx-post="/api/prompts/llm-config?format=html" hx-target="#llm-config" hx-swap="innerHTML">
+  <p class="muted">Uses OpenAI Python SDK Responses API with model-safe params.</p>
+  <datalist id="llm-model-options">
+    {% for model in model_options %}<option value="{{ model }}"></option>
+    {% endfor %}
+  </datalist>
+  <div class="grid">
+    <div>
+      <label for="llm-model-ingest">Ingest Model</label>
+      <input id="llm-model-ingest" name="model_ingest" list="llm-model-options" value="{{ cfg.model_ingest }}" required>
+    </div>
+    <div>
+      <label for="llm-model-distill">Distill Model</label>
+      <input id="llm-model-distill" name="model_distill" list="llm-model-options" value="{{ cfg.model_distill }}" required>
+    </div>
+    <div>
+      <label for="llm-model-analysis">Analysis/Chat Model</label>
+      <input id="llm-model-analysis" name="model_analysis" list="llm-model-options" value="{{ cfg.model_analysis }}" required>
+    </div>
+    <div>
+      <label for="llm-base-url">OpenAI Base URL (optional)</label>
+      <input id="llm-base-url" name="openai_base_url" value="{{ cfg.openai_base_url or '' }}" placeholder="https://api.openai.com/v1">
+    </div>
+    <div>
+      <label for="llm-api-key">OpenAI API Key (leave blank to keep current)</label>
+      <input id="llm-api-key" name="openai_api_key" type="password" placeholder="sk-...">
+    </div>
+  </div>
+  <div class="toolbar">
+    <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="persist" value="1" checked style="width:auto;">Persist to .env</label>
+    <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="clear_api_key" value="1" style="width:auto;">Clear API key</label>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Save LLM Settings</button>
+  </div>
+</form>

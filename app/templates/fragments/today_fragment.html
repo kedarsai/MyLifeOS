@@ -1,0 +1,11 @@
+{# Today view — expects: data (with today, due_today, overdue, next_actions), notice #}
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<p><strong>Today:</strong> {{ data.today }}</p>
+{% for section_title, section_items in [('Due Today', data.due_today), ('Overdue', data.overdue), ('Next Actions', data.next_actions)] %}
+<h3>{{ section_title }} ({{ section_items|length }})</h3>
+{% with items=section_items, qs='', project_options=[], target_id='#today-results', view='today', empty_text='No items.' %}
+{% include "fragments/task_grid.html" %}
+{% endwith %}
+{% endfor %}

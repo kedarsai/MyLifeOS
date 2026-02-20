@@ -1,0 +1,34 @@
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+{% if error %}
+<div class="result" style="border-color:#d17a7a;background:#fff2f2;color:#661a1a;">{{ error }}</div>
+{% endif %}
+{% if not files %}
+<p>No prompt YAML files found in <code>Vault/config/prompts</code>.</p>
+{% else %}
+<form hx-get="/api/prompts/editor?format=html" hx-target="#prompt-editor" hx-swap="innerHTML">
+  <div class="grid">
+    <div>
+      <label for="prompt-editor-file">Prompt File</label>
+      <select id="prompt-editor-file" name="file">
+        {% for item in files %}
+        <option value="{{ item.file }}"{{ ' selected' if item.file == selected_file else '' }}>{{ item.prompt_id }} ({{ item.version }}) - {{ item.file }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button type="submit">Load Prompt</button>
+  </div>
+</form>
+<form hx-post="/api/prompts/editor?format=html" hx-target="#prompt-editor" hx-swap="innerHTML">
+  <input type="hidden" name="file" value="{{ selected_file }}">
+  <label for="prompt-editor-content">YAML</label>
+  <textarea id="prompt-editor-content" name="content" style="min-height:360px;font-family:IBM Plex Mono, monospace;">{{ content }}</textarea>
+  <div class="toolbar">
+    <button type="submit">Save Prompt</button>
+    <button type="button" hx-post="/api/prompts/reload?format=html" hx-target="#prompt-list" hx-swap="innerHTML">Reload Prompt Registry</button>
+  </div>
+</form>
+{% endif %}

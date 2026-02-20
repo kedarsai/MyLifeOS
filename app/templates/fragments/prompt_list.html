@@ -1,0 +1,17 @@
+{% if notice %}
+<div class="result success">{{ notice }}</div>
+{% endif %}
+<p><strong>{{ total }}</strong> prompt templates.</p>
+<div class="entry-list">
+  {% for item in items %}
+  <article class="entry-card">
+    <h4>{{ item.prompt_id }} <small>({{ item.version }})</small></h4>
+    <p><strong>Name:</strong> {{ item.name }}</p>
+    <p><strong>Provider/Model:</strong> {{ item.provider }} / {{ item.model }}</p>
+    <p><strong>Params:</strong> <code>{{ item.params|tojson }}</code></p>
+    <p><strong>Loaded:</strong> {{ item.created_at }}</p>
+  </article>
+  {% else %}
+  <p>No prompt templates loaded yet.</p>
+  {% endfor %}
+</div>

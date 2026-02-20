@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifeos.local/schemas/weekly_goal_review.json",
+  "title": "Weekly Goal Review",
+  "description": "Weekly review generated from deterministic metrics plus LLM narrative.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "goal_id",
+    "period",
+    "deterministic_metrics",
+    "what_went_well",
+    "what_did_not_go_well",
+    "patterns",
+    "next_best_actions",
+    "risk_level",
+    "confidence"
+  ],
+  "properties": {
+    "goal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "period": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_date",
+        "end_date",
+        "timezone"
+      ],
+      "properties": {
+        "start_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "end_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "deterministic_metrics": {
+      "$ref": "#/$defs/deterministicMetrics"
+    },
+    "missing_data": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/missingData"
+      },
+      "maxItems": 30
+    },
+    "what_went_well": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      },
+      "maxItems": 10
+    },
+    "what_did_not_go_well": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      },
+      "maxItems": 10
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 400
+      },
+      "maxItems": 12
+    },
+    "next_best_actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/action"
+      },
+      "minItems": 1,
+      "maxItems": 8
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "$defs": {
+    "deterministicMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "logging_completeness_pct"
+      ],
+      "properties": {
+        "steps_avg_7d": {
+          "type": "number",
+          "minimum": 0
+        },
+        "steps_streak_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sleep_avg_min_7d": {
+          "type": "number",
+          "minimum": 0
+        },
+        "weight_latest_kg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "weight_trend_7d_kg_per_week": {
+          "type": "number"
+        },
+        "weight_trend_30d_kg_per_week": {
+          "type": "number"
+        },
+        "activity_sleep_corr": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "sleep_weight_corr": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+        },
+        "logging_completeness_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "missingData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metric",
+        "date"
+      ],
+      "properties": {
+        "metric": {
+          "type": "string",
+          "enum": [
+            "sleep",
+            "food",
+            "activity",
+            "weight",
+            "other"
+          ]
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "priority"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "due_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    }
+  }
+}

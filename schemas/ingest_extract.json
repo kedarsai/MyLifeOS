@@ -1,0 +1,460 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifeos.local/schemas/ingest_extract.json",
+  "title": "Ingest Extract Output",
+  "description": "Structured output for processing one raw inbox entry.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entry_type",
+    "summary",
+    "details_bullets",
+    "tags",
+    "goal_links",
+    "observations",
+    "actions",
+    "needs_followup",
+    "followup_questions",
+    "confidence"
+  ],
+  "properties": {
+    "entry_type": {
+      "type": "string",
+      "enum": [
+        "activity",
+        "sleep",
+        "food",
+        "thought",
+        "idea",
+        "todo",
+        "goal",
+        "note",
+        "chat"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 280
+    },
+    "details_bullets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "maxItems": 20
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 40
+      },
+      "uniqueItems": true,
+      "maxItems": 30
+    },
+    "goal_links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/goalLink"
+      },
+      "maxItems": 20
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activity",
+        "sleep",
+        "food",
+        "weight"
+      ],
+      "properties": {
+        "activity": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/activityObservation"
+          },
+          "maxItems": 10
+        },
+        "sleep": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sleepObservation"
+          },
+          "maxItems": 10
+        },
+        "food": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/foodObservation"
+          },
+          "maxItems": 20
+        },
+        "weight": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/weightObservation"
+          },
+          "maxItems": 5
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/taskAction"
+      },
+      "maxItems": 20
+    },
+    "tool_calls": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ingestToolCall"
+      },
+      "maxItems": 20
+    },
+    "needs_followup": {
+      "type": "boolean"
+    },
+    "followup_questions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 240
+      },
+      "maxItems": 8
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "needs_followup": {
+            "const": true
+          }
+        },
+        "required": [
+          "needs_followup"
+        ]
+      },
+      "then": {
+        "properties": {
+          "followup_questions": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "goalLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "goal_id",
+        "link_type"
+      ],
+      "properties": {
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "link_type": {
+          "type": "string",
+          "enum": [
+            "related",
+            "evidence",
+            "blocker",
+            "milestone"
+          ]
+        }
+      }
+    },
+    "activityObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observed_at",
+        "confidence"
+      ],
+      "properties": {
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "steps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duration_min": {
+          "type": "number",
+          "minimum": 0
+        },
+        "distance_km": {
+          "type": "number",
+          "minimum": 0
+        },
+        "location": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "calories": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pace": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "sleepObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sleep_start",
+        "sleep_end",
+        "confidence"
+      ],
+      "properties": {
+        "sleep_start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sleep_end": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration_min": {
+          "type": "number",
+          "minimum": 0
+        },
+        "quality": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "foodObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observed_at",
+        "meal_type",
+        "items",
+        "confidence"
+      ],
+      "properties": {
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "meal_type": {
+          "type": "string",
+          "enum": [
+            "breakfast",
+            "lunch",
+            "dinner",
+            "snack",
+            "other"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/foodItem"
+          },
+          "maxItems": 30
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "foodItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "quantity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "calories_estimate": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "weightObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "measured_at",
+        "weight_kg",
+        "confidence"
+      ],
+      "properties": {
+        "measured_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "weight_kg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "taskAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "priority"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "due_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "in_progress",
+            "done",
+            "cancelled"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "ingestToolCall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "arguments"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": [
+            "resolve_relative_due_date",
+            "set_due_date"
+          ]
+        },
+        "arguments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action_index"
+          ],
+          "properties": {
+            "action_index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 19
+            },
+            "offset_days": {
+              "type": "integer",
+              "minimum": -3650,
+              "maximum": 3650
+            },
+            "date": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "required": [
+                  "offset_days"
+                ]
+              },
+              "then": {
+                "not": {
+                  "required": [
+                    "date"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lifeos.local/schemas/distill_outcomes.json",
+  "title": "Distill Outcomes",
+  "description": "Converts goal-chat transcript(s) into durable insights, improvements, and todos.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "thread_id",
+    "summary",
+    "insights",
+    "improvements",
+    "todos",
+    "confidence"
+  ],
+  "properties": {
+    "thread_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "goal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "insights": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/insight"
+      },
+      "maxItems": 15
+    },
+    "improvements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/improvement"
+      },
+      "maxItems": 12
+    },
+    "todos": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/todo"
+      },
+      "maxItems": 20
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "$defs": {
+    "insight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "evidence",
+        "confidence"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 1,
+          "maxItems": 20
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "improvement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "rationale",
+        "priority"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "success_metric": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "target_value": {
+          "type": [
+            "number",
+            "string",
+            "boolean"
+          ]
+        },
+        "review_cadence_days": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      }
+    },
+    "todo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "priority"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "due_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "in_progress",
+            "done",
+            "cancelled"
+          ]
+        },
+        "source_message_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 50
+        },
+        "rationale": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry_id",
+        "note"
+      ],
+      "properties": {
+        "entry_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        }
+      }
+    }
+  }
+}

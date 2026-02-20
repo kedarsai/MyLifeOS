@@ -1,0 +1,27 @@
+{% set total_pages = [1, ((total + page_size - 1) // page_size)]|max %}
+<p><strong>{{ total }}</strong> entries. Page {{ page }} of {{ total_pages }}.</p>
+<div class="entry-list">
+  {% for item in items %}
+  <article class="entry-card">
+    <h4>{{ item.summary or '(no summary)' }}</h4>
+    <p><code>{{ item.id }}</code></p>
+    <p><strong>Created:</strong> {{ item.created_at }} | <strong>Type:</strong> {{ item.type }} | <strong>Status:</strong> {{ item.status }}</p>
+    <p><strong>Tags:</strong> {{ item.tags|join(', ') or '-' }} | <strong>Goals:</strong> {{ item.goals|join(', ') or '-' }}</p>
+    <p>{{ item.raw_text|truncate_text(180) }}</p>
+  </article>
+  {% else %}
+  <p>No entries match this filter.</p>
+  {% endfor %}
+</div>
+<div class="pager">
+  {% if page > 1 %}
+  <button type="button"
+    hx-get="/api/entries/timeline?{{ pager_base }}&page={{ page - 1 }}"
+    hx-target="#timeline-results" hx-swap="innerHTML">Previous</button>
+  {% endif %}
+  {% if page < total_pages %}
+  <button type="button"
+    hx-get="/api/entries/timeline?{{ pager_base }}&page={{ page + 1 }}"
+    hx-target="#timeline-results" hx-swap="innerHTML">Next</button>
+  {% endif %}
+</div>

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+    {% include "fragments/workflow_bar.html" %}
+    <section class="panel">
+      <h3>Create Improvement</h3>
+      <form hx-post="/api/improvements?format=html" hx-target="#improvements-list" hx-swap="innerHTML">
+        <div class="grid">
+          <div>
+            <label for="title">Title</label>
+            <input id="title" name="title" required placeholder="Morning routine consistency">
+          </div>
+          <div>
+            <label for="source_run_id">Source Run ID</label>
+            <input id="source_run_id" name="source_run_id" required placeholder="llm-...">
+          </div>
+          <div>
+            <label for="goal_id">Goal</label>
+            <select id="goal_id" name="goal_id">
+              <option value="">-- none --</option>
+              {% for g in goals %}<option value="{{ g.goal_id }}">{{ g.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="source_entry_id">Entry ID (optional)</label>
+            <input id="source_entry_id" name="source_entry_id" placeholder="entry-...">
+          </div>
+        </div>
+        <label for="rationale">Rationale</label>
+        <textarea id="rationale" name="rationale" required></textarea>
+        <div class="toolbar">
+          <button type="submit">Create Improvement</button>
+        </div>
+      </form>
+    </section>
+    <section class="panel">
+      <div
+        id="improvements-list"
+        hx-get="/api/improvements?format=html"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      ></div>
+    </section>
+{% endblock %}

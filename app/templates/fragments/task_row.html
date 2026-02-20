@@ -1,0 +1,50 @@
+{# Single task grid row — expects: item, qs, project_options, target_id, view #}
+{% set status = item.status or 'open' %}
+{% set status_cls_map = {'open': 'task-badge status-open', 'in_progress': 'task-badge status-inprogress', 'done': 'task-badge status-done', 'cancelled': 'task-badge status-cancelled'} %}
+{% set priority = item.priority or 'medium' %}
+{% set priority_cls_map = {'high': 'task-badge priority-high', 'medium': 'task-badge priority-medium', 'low': 'task-badge priority-low'} %}
+{% set goal_label = (item.goal_name or item.goal_id) ~ ' (' ~ item.goal_id ~ ')' if item.goal_id else '-' %}
+{% set project_label = ((item.project_name or item.project_id) ~ (' [' ~ item.project_kind ~ ']' if item.project_kind else '')) if item.project_id else '-' %}
+{% set qtail = '&' ~ qs if qs else '' %}
+{% set complete_url = '/api/tasks/' ~ item.task_id ~ '/complete?format=html&view=tasks' ~ qtail if view == 'tasks' else '/api/tasks/' ~ item.task_id ~ '/complete?format=html' %}
+{% set delete_url = '/api/tasks/' ~ item.task_id ~ '/delete?format=html&view=tasks' ~ qtail if view == 'tasks' else '/api/tasks/' ~ item.task_id ~ '/delete?format=html' %}
+<tr>
+  <td class="task-col-title"><strong>{{ item.title }}</strong></td>
+  <td><span class="{{ status_cls_map.get(status, 'task-badge') }}">{{ status|replace('_', ' ') }}</span></td>
+  <td><span class="{{ priority_cls_map.get(priority, 'task-badge') }}">{{ priority }}</span></td>
+  <td>{{ item.due_date or '-' }}</td>
+  <td>{{ goal_label }}</td>
+  <td>{{ project_label }}</td>
+  <td>{{ item.updated_at or '-' }}</td>
+  <td>
+    <button type="button" class="task-complete-btn"
+      hx-post="{{ complete_url }}" hx-target="{{ target_id }}" hx-swap="innerHTML">Complete</button>
+  </td>
+  <td>
+    <button type="button" class="task-delete-btn"
+      hx-post="{{ delete_url }}" hx-confirm="Delete this task?"
+      hx-target="{{ target_id }}" hx-swap="innerHTML">Delete</button>
+  </td>
+  <td>
+    <details class="task-grid-detail">
+      <summary>Details</summary>
+      <div class="task-grid-detail-body">
+        <p><strong>Task ID:</strong> <code>{{ item.task_id }}</code></p>
+        <p class="muted">{{ item.rationale or 'No rationale recorded.' }}</p>
+        {% if view == 'tasks' %}
+        <form hx-post="/api/tasks/{{ item.task_id }}/project?format=html&view=tasks{{ qtail }}"
+              hx-target="{{ target_id }}" hx-swap="innerHTML">
+          <label>Assign Project</label>
+          <select name="project_id">
+            <option value="">none</option>
+            {% for project in project_options %}
+            <option value="{{ project.project_id }}"{{ ' selected' if item.project_id == project.project_id else '' }}>{{ project.name }} ({{ project.kind }})</option>
+            {% endfor %}
+          </select>
+          <div class="toolbar"><button type="submit">Save Project</button></div>
+        </form>
+        {% endif %}
+      </div>
+    </details>
+  </td>
+</tr>

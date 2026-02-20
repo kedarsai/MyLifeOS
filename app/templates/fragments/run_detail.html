@@ -1,0 +1,23 @@
+{# Run detail — expects: item #}
+{% set output_json = item.output|tojson(indent=2) if item.output is not none else '-' %}
+{% set inputs = item.input_refs|join(', ') if item.input_refs else '-' %}
+{% set retry_disabled = 'disabled' if item.output is none else '' %}
+<h3>Run {{ item.run_id }}</h3>
+<p><strong>Prompt:</strong> {{ item.prompt_id }}@{{ item.prompt_version }}</p>
+<p><strong>Model:</strong> {{ item.model or '-' }}</p>
+<p><strong>Status:</strong> {{ item.status }} | <strong>parse_ok:</strong> {{ item.parse_ok|string|lower }}</p>
+<p><strong>Retry of:</strong> {{ item.parent_run_id or '-' }}</p>
+<p><strong>Created:</strong> {{ item.created_at }}</p>
+<p><strong>Completed:</strong> {{ item.completed_at or '-' }}</p>
+<p><strong>Input refs:</strong> {{ inputs }}</p>
+<p><strong>Error:</strong> {{ item.error_text or '-' }}</p>
+<div class="toolbar">
+  <button type="button"
+    {{ retry_disabled }}
+    hx-post="/api/runs/{{ item.run_id }}/retry?format=html"
+    hx-vals='{"actor":"local_user"}'
+    hx-target="#run-detail" hx-swap="innerHTML"
+    hx-on::after-request="htmx.ajax('GET','/api/runs?format=html&limit=100&offset=0',{target:'#runs-list',swap:'innerHTML'});">Retry</button>
+</div>
+<h4>Output JSON</h4>
+<pre>{{ output_json }}</pre>

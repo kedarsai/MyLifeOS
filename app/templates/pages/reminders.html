@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="panel">
+      <div class="toolbar">
+        <button
+          type="button"
+          hx-get="/api/reminders?format=html"
+          hx-target="#reminders-results"
+          hx-swap="innerHTML"
+        >
+          Refresh Reminders
+        </button>
+        <button
+          type="button"
+          hx-post="/api/backups/run"
+          hx-vals='{"mode":"daily"}'
+          hx-target="#backup-status"
+          hx-swap="innerHTML"
+        >
+          Run Daily Backup
+        </button>
+      </div>
+      <pre id="backup-status"
+           hx-get="/api/backups/status"
+           hx-trigger="load"
+           hx-swap="innerHTML">Loading backup status...</pre>
+    </section>
+    <div class="page-grid">
+      <section class="panel">
+        <h3>Missing Data + Alerts</h3>
+        <div
+          id="reminders-results"
+          hx-get="/api/reminders?format=html"
+          hx-trigger="load"
+          hx-swap="innerHTML"
+        ></div>
+      </section>
+      <section class="panel">
+        <h3>Quick Check-in</h3>
+        <form
+          hx-post="/api/checkin/sleep?format=html"
+          hx-target="#reminders-results"
+          hx-swap="innerHTML"
+        >
+          <label>Backfill Date (optional YYYY-MM-DD)</label>
+          <input name="date" placeholder="2026-02-18">
+          <label>Goal</label>
+          <select name="goal_id">
+            <option value="">-- none --</option>
+            {% for g in goals %}<option value="{{ g.goal_id }}">{{ g.name }}</option>
+            {% endfor %}
+          </select>
+          <label>Sleep check-in notes</label>
+          <textarea name="notes" placeholder="Hours slept, quality, wake time..."></textarea>
+          <div class="toolbar"><button type="submit">Save Sleep</button></div>
+        </form>
+        <form
+          hx-post="/api/checkin/food?format=html"
+          hx-target="#reminders-results"
+          hx-swap="innerHTML"
+        >
+          <label>Backfill Date (optional YYYY-MM-DD)</label>
+          <input name="date" placeholder="2026-02-18">
+          <label>Goal</label>
+          <select name="goal_id">
+            <option value="">-- none --</option>
+            {% for g in goals %}<option value="{{ g.goal_id }}">{{ g.name }}</option>
+            {% endfor %}
+          </select>
+          <label>Food check-in notes</label>
+          <textarea name="notes" placeholder="Meals, portions, timing..."></textarea>
+          <div class="toolbar"><button type="submit">Save Food</button></div>
+        </form>
+        <form
+          hx-post="/api/checkin/activity?format=html"
+          hx-target="#reminders-results"
+          hx-swap="innerHTML"
+        >
+          <label>Backfill Date (optional YYYY-MM-DD)</label>
+          <input name="date" placeholder="2026-02-18">
+          <label>Goal</label>
+          <select name="goal_id">
+            <option value="">-- none --</option>
+            {% for g in goals %}<option value="{{ g.goal_id }}">{{ g.name }}</option>
+            {% endfor %}
+          </select>
+          <label>Activity check-in notes</label>
+          <textarea name="notes" placeholder="Steps, workout, duration..."></textarea>
+          <div class="toolbar"><button type="submit">Save Activity</button></div>
+        </form>
+      </section>
+    </div>
+{% endblock %}
+{% block extra_scripts %}
+    <script>
+      document.body.addEventListener('htmx:afterRequest', function (evt) {
+        if (!evt.detail || !evt.detail.target) return;
+        var id = evt.detail.target.id;
+        if (id === 'backup-status') {
+          try {
+            var data = JSON.parse(evt.detail.xhr.responseText);
+            evt.detail.target.textContent = JSON.stringify(data, null, 2);
+          } catch (e) {}
+        }
+      });
+    </script>
+{% endblock %}

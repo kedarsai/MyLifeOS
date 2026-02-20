@@ -1,0 +1,9 @@
+<div class="result success">
+  <strong>Captured:</strong> {{ item.entry_id }}<br>
+  <small>{{ item.created }} | {{ item.path }}</small>
+</div>
+{% if inbox_count > 0 %}
+<div class="nudge">
+  {{ inbox_count }} items in inbox &rarr; <a href="/inbox">Process now</a>
+</div>
+{% endif %}

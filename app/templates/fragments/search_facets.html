@@ -1,0 +1,28 @@
+{# Search facet row — expects: name, key, rows, q, page_size, entry_type, tag, goal, query_url (callable) #}
+{% if not rows %}
+<p><strong>{{ name }}:</strong> -</p>
+{% else %}
+<div class='facet-row'>
+  <strong>{{ name }}:</strong>
+  <div class='facet-chips'>
+    {% for row in rows %}
+    {% set value = row.value|string %}
+    {% set count = row.count|int %}
+    {% set is_active = (key == 'type' and entry_type == value) or (key == 'tag' and tag == value) or (key == 'goal' and goal == value) %}
+    {% set url = query_url(q=q, page=1, page_size=page_size,
+        entry_type=(value if key == 'type' else entry_type),
+        tag=(value if key == 'tag' else tag),
+        goal=(value if key == 'goal' else goal)) %}
+    <button type='button' class='{{ 'facet-chip active' if is_active else 'facet-chip' }}' hx-get='{{ url }}' hx-target='#search-results' hx-swap='innerHTML'>{{ value }} ({{ count }})</button>
+    {% endfor %}
+    {% set has_active = (key == 'type' and entry_type) or (key == 'tag' and tag) or (key == 'goal' and goal) %}
+    {% if has_active %}
+    {% set clear_url = query_url(q=q, page=1, page_size=page_size,
+        entry_type=(none if key == 'type' else entry_type),
+        tag=(none if key == 'tag' else tag),
+        goal=(none if key == 'goal' else goal)) %}
+    <button type='button' class='facet-clear' hx-get='{{ clear_url }}' hx-target='#search-results' hx-swap='innerHTML'>clear</button>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

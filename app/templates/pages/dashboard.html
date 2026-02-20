@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="panel">
+      <div class="toolbar">
+        <button
+          type="button"
+          hx-get="/api/dashboard/summary?format=html"
+          hx-target="#dashboard-summary"
+          hx-swap="innerHTML"
+        >
+          Refresh
+        </button>
+      </div>
+      <div
+        id="dashboard-summary"
+        hx-get="/api/dashboard/summary?format=html"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      ></div>
+    </section>
+{% endblock %}

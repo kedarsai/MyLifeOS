@@ -1,0 +1,45 @@
+{# Search results — expects: q, page, page_size, total, total_pages, entry_type, tag, goal, items, facets, query_url (callable) #}
+{% set active_filters = [] %}
+{% if entry_type %}{% set _ = active_filters.append('type=' ~ entry_type) %}{% endif %}
+{% if tag %}{% set _ = active_filters.append('tag=' ~ tag) %}{% endif %}
+{% if goal %}{% set _ = active_filters.append('goal=' ~ goal) %}{% endif %}
+<p><strong>{{ total }}</strong> results for <code>{{ q }}</code>. Page {{ page }} of {{ total_pages }}.</p>
+{% if active_filters %}
+<p><strong>Active Filters:</strong> {{ active_filters|join(', ') }}</p>
+{% else %}
+<p><strong>Active Filters:</strong> none</p>
+{% endif %}
+{% with name='Type', key='type', rows=facets.get('type', []) %}
+{% include "fragments/search_facets.html" %}
+{% endwith %}
+{% with name='Tags', key='tag', rows=facets.get('tags', []) %}
+{% include "fragments/search_facets.html" %}
+{% endwith %}
+{% with name='Goals', key='goal', rows=facets.get('goals', []) %}
+{% include "fragments/search_facets.html" %}
+{% endwith %}
+<div class='entry-list'>
+  {% for item in items %}
+  <article class='entry-card'>
+    <h4>{{ item.summary or '(no summary)' }}</h4>
+    <p><code>{{ item.id }}</code></p>
+    <p><strong>Type:</strong> {{ item.type }} | <strong>Status:</strong> {{ item.status }} | <strong>Created:</strong> {{ item.created_at }}</p>
+    <p><strong>Summary Snippet:</strong> {{ item.summary_snippet|snippet_html }}</p>
+    <p><strong>Text Snippet:</strong> {{ item.raw_snippet|snippet_html }}</p>
+    <p><strong>Score:</strong> {{ '%.4f'|format(item.score) }}</p>
+    <p><code>{{ item.path }}</code></p>
+  </article>
+  {% else %}
+  <p>No results.</p>
+  {% endfor %}
+</div>
+<div class='pager'>
+  {% if page > 1 %}
+  {% set prev_url = query_url(q=q, page=page - 1, page_size=page_size, entry_type=entry_type, tag=tag, goal=goal) %}
+  <button type='button' hx-get='{{ prev_url }}' hx-target='#search-results' hx-swap='innerHTML'>Previous</button>
+  {% endif %}
+  {% if page < total_pages %}
+  {% set next_url = query_url(q=q, page=page + 1, page_size=page_size, entry_type=entry_type, tag=tag, goal=goal) %}
+  <button type='button' hx-get='{{ next_url }}' hx-target='#search-results' hx-swap='innerHTML'>Next</button>
+  {% endif %}
+</div>

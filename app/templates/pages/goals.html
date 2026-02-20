@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+    <section class="panel">
+      <h3>Create Goal</h3>
+      <form hx-post="/api/goals?format=html" hx-target="#goals-list" hx-swap="innerHTML">
+        <div class="grid">
+          <div>
+            <label for="name">Name</label>
+            <input id="name" name="name" required placeholder="Improve sleep consistency">
+          </div>
+          <div>
+            <label for="start_date">Start Date (YYYY-MM-DD)</label>
+            <input id="start_date" name="start_date" required placeholder="2026-02-19">
+          </div>
+          <div>
+            <label for="end_date">End Date (optional)</label>
+            <input id="end_date" name="end_date" placeholder="2026-04-30">
+          </div>
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="active">active</option>
+              <option value="paused">paused</option>
+              <option value="completed">completed</option>
+              <option value="archived">archived</option>
+            </select>
+          </div>
+          <div>
+            <label for="review_cadence_days">Review Cadence Days</label>
+            <input id="review_cadence_days" name="review_cadence_days" type="number" min="1" max="365" value="7">
+          </div>
+          <div>
+            <label for="metrics">Metrics (comma-separated)</label>
+            <input id="metrics" name="metrics" placeholder="steps,sleep,weight">
+          </div>
+        </div>
+        <label for="rules_md">Rules</label>
+        <textarea id="rules_md" name="rules_md" placeholder="- Sleep before 11pm\n- Min 7000 steps"></textarea>
+        <div class="toolbar">
+          <button type="submit">Create Goal</button>
+        </div>
+      </form>
+    </section>
+    {% include "fragments/workflow_bar.html" %}
+    <section class="panel">
+      <h3>Goals</h3>
+      <div
+        id="goals-list"
+        hx-get="/api/goals?format=html"
+        hx-trigger="load"
+        hx-swap="innerHTML"
+      ></div>
+    </section>
+    <section class="panel">
+      <h3>Goal Hub</h3>
+      <div id="goal-hub-container">
+        <p class="muted">Select a goal to view its hub.</p>
+      </div>
+      <div class="hub-tabs" id="goal-hub-tabs" style="display:none;">
+        <button class="hub-tab active" type="button" onclick="showHubTab('dashboard')">Dashboard</button>
+        <button class="hub-tab" type="button" onclick="showHubTab('tasks')">Tasks</button>
+        <button class="hub-tab" type="button" onclick="showHubTab('reviews')">Reviews</button>
+        <button class="hub-tab" type="button" onclick="showHubTab('improvements')">Improvements</button>
+        <button class="hub-tab" type="button" onclick="showHubTab('chat')">Chat</button>
+      </div>
+      <div id="hub-panel-dashboard" class="hub-panel active">
+        <div id="goal-dashboard">
+          <p class="muted">Select a goal to view deterministic metrics.</p>
+        </div>
+      </div>
+      <div id="hub-panel-tasks" class="hub-panel">
+        <div id="goal-hub-tasks"><p class="muted">Loading tasks...</p></div>
+      </div>
+      <div id="hub-panel-reviews" class="hub-panel">
+        <div id="goal-hub-reviews"><p class="muted">Loading reviews...</p></div>
+      </div>
+      <div id="hub-panel-improvements" class="hub-panel">
+        <div id="goal-hub-improvements"><p class="muted">Loading improvements...</p></div>
+      </div>
+      <div id="hub-panel-chat" class="hub-panel">
+        <div id="goal-hub-chat"><p class="muted">Loading chat threads...</p></div>
+      </div>
+    </section>
+{% endblock %}
+{% block extra_scripts %}
+    <script>
+      function showHubTab(name) {
+        var tabs = document.querySelectorAll('.hub-tab');
+        var panels = document.querySelectorAll('.hub-panel');
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        panels.forEach(function(p) { p.classList.remove('active'); });
+        var target = document.getElementById('hub-panel-' + name);
+        if (target) target.classList.add('active');
+        tabs.forEach(function(t) {
+          if (t.textContent.trim().toLowerCase() === name) t.classList.add('active');
+        });
+      }
+      function loadGoalHub(goalId) {
+        document.getElementById('goal-hub-tabs').style.display = 'flex';
+        document.getElementById('goal-hub-container').innerHTML = '<p class="muted">Loading hub for ' + goalId + '...</p>';
+        showHubTab('dashboard');
+        htmx.ajax('GET', '/api/goals/' + encodeURIComponent(goalId) + '/dashboard?format=html', {target:'#goal-dashboard', swap:'innerHTML'});
+        htmx.ajax('GET', '/api/tasks?format=html&goal_id=' + encodeURIComponent(goalId), {target:'#goal-hub-tasks', swap:'innerHTML'});
+        htmx.ajax('GET', '/api/reviews?format=html&goal_id=' + encodeURIComponent(goalId), {target:'#goal-hub-reviews', swap:'innerHTML'});
+        htmx.ajax('GET', '/api/improvements?format=html&goal_id=' + encodeURIComponent(goalId), {target:'#goal-hub-improvements', swap:'innerHTML'});
+        htmx.ajax('GET', '/api/chat/threads?format=html&goal_id=' + encodeURIComponent(goalId), {target:'#goal-hub-chat', swap:'innerHTML'});
+      }
+    </script>
+{% endblock %}
