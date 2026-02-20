@@ -60,6 +60,25 @@ def create_app() -> FastAPI:
     app.include_router(today_router)
     app.include_router(conflicts_router)
     app.include_router(ui_router)
+
+    # --- SPA catch-all (only when frontend/dist exists) ---
+    _frontend_dist = Path(__file__).resolve().parents[1] / "frontend" / "dist"
+    if _frontend_dist.is_dir():
+        app.mount(
+            "/assets",
+            StaticFiles(directory=str(_frontend_dist / "assets")),
+            name="spa-assets",
+        )
+
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def spa_catch_all(full_path: str):
+            from fastapi.responses import FileResponse
+
+            file_path = _frontend_dist / full_path
+            if file_path.is_file() and ".." not in full_path:
+                return FileResponse(str(file_path))
+            return FileResponse(str(_frontend_dist / "index.html"))
+
     return app
 
 

@@ -1,0 +1,241 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@theme {
+  --font-sans: "Inter Variable", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* --- Radius --- */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* --- Shadows (all use dark blue-grey, NOT pure black) --- */
+  --shadow-xs: 0 1px 2px rgba(41, 47, 61, 0.04);
+  --shadow-sm: 0 1px 3px rgba(41, 47, 61, 0.06);
+  --shadow-md: 0 2px 8px rgba(41, 47, 61, 0.08);
+  --shadow-lg: 0 4px 16px rgba(41, 47, 61, 0.10);
+  --shadow-xl: 0 8px 32px rgba(41, 47, 61, 0.12);
+  --shadow-overlay: 0 16px 48px rgba(41, 47, 61, 0.16);
+}
+
+/* ===== LIGHT THEME (default) ===== */
+:root {
+  /* Canvas: deepest background, used once on root */
+  --color-canvas: #f7f7f8;
+
+  /* Surface: cards, panels, sidebar */
+  --color-surface-primary: #ffffff;
+  --color-surface-secondary: #f9fafb;
+  --color-surface-tertiary: #f3f4f6;
+
+  /* Layer: hover/active states within surfaces */
+  --color-layer-hover: #f3f4f6;
+  --color-layer-active: #e5e7eb;
+  --color-layer-selected: #eff6ff;
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-tertiary: #9ca3af;
+  --color-text-placeholder: #d1d5db;
+  --color-text-inverse: #ffffff;
+  --color-text-link: #2563eb;
+
+  /* Borders */
+  --color-border-subtle: #f3f4f6;
+  --color-border-default: #e5e7eb;
+  --color-border-strong: #d1d5db;
+
+  /* Accent (blue) */
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-muted: #eff6ff;
+  --color-accent-muted-hover: #dbeafe;
+
+  /* Sidebar (dark, stays dark in both themes) */
+  --color-sidebar-bg: #111827;
+  --color-sidebar-bg-hover: rgba(255,255,255,0.06);
+  --color-sidebar-bg-active: rgba(255,255,255,0.10);
+  --color-sidebar-text: #d1d5db;
+  --color-sidebar-text-active: #ffffff;
+  --color-sidebar-text-muted: #6b7280;
+  --color-sidebar-border: rgba(255,255,255,0.08);
+  --color-sidebar-section: #6b7280;
+
+  /* Status colors */
+  --color-success: #059669;
+  --color-success-muted: #ecfdf5;
+  --color-success-muted-border: #a7f3d0;
+  --color-warning: #d97706;
+  --color-warning-muted: #fffbeb;
+  --color-warning-muted-border: #fde68a;
+  --color-danger: #dc2626;
+  --color-danger-muted: #fef2f2;
+  --color-danger-muted-border: #fecaca;
+  --color-info: #2563eb;
+  --color-info-muted: #eff6ff;
+  --color-info-muted-border: #bfdbfe;
+
+  /* Task priority */
+  --color-priority-high: #dc2626;
+  --color-priority-medium: #d97706;
+  --color-priority-low: #2563eb;
+
+  /* Task status badges */
+  --color-status-open-bg: #eff6ff;
+  --color-status-open-border: #93c5fd;
+  --color-status-open-text: #1e40af;
+  --color-status-inprogress-bg: #fffbeb;
+  --color-status-inprogress-border: #fcd34d;
+  --color-status-inprogress-text: #92400e;
+  --color-status-done-bg: #ecfdf5;
+  --color-status-done-border: #6ee7b7;
+  --color-status-done-text: #065f46;
+  --color-status-cancelled-bg: #f9fafb;
+  --color-status-cancelled-border: #d1d5db;
+  --color-status-cancelled-text: #6b7280;
+
+  /* Entry type badge colors (9 types) */
+  --color-type-activity-bg: #eff6ff;    --color-type-activity-text: #1e40af;
+  --color-type-sleep-bg: #f5f3ff;       --color-type-sleep-text: #5b21b6;
+  --color-type-food-bg: #fffbeb;        --color-type-food-text: #92400e;
+  --color-type-thought-bg: #fff7ed;     --color-type-thought-text: #9a3412;
+  --color-type-idea-bg: #fdf2f8;        --color-type-idea-text: #9d174d;
+  --color-type-todo-bg: #eff6ff;        --color-type-todo-text: #1e40af;
+  --color-type-goal-bg: #ecfdf5;        --color-type-goal-text: #065f46;
+  --color-type-note-bg: #f9fafb;        --color-type-note-text: #374151;
+  --color-type-chat-bg: #ecfdf5;        --color-type-chat-text: #065f46;
+
+  /* Input */
+  --color-input-bg: #ffffff;
+  --color-input-border: #d1d5db;
+  --color-input-focus-ring: #2563eb;
+}
+
+/* ===== DARK THEME ===== */
+.dark {
+  --color-canvas: #0a0a0b;
+  --color-surface-primary: #111113;
+  --color-surface-secondary: #18181b;
+  --color-surface-tertiary: #1f1f23;
+
+  --color-layer-hover: #27272a;
+  --color-layer-active: #3f3f46;
+  --color-layer-selected: #1e3a5f;
+
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-text-tertiary: #71717a;
+  --color-text-placeholder: #52525b;
+  --color-text-inverse: #09090b;
+  --color-text-link: #60a5fa;
+
+  --color-border-subtle: #27272a;
+  --color-border-default: #3f3f46;
+  --color-border-strong: #52525b;
+
+  --color-accent: #3b82f6;
+  --color-accent-hover: #60a5fa;
+  --color-accent-muted: #1e3a5f;
+  --color-accent-muted-hover: #1e40af;
+
+  --color-sidebar-bg: #09090b;
+  --color-sidebar-bg-hover: rgba(255,255,255,0.04);
+  --color-sidebar-bg-active: rgba(255,255,255,0.08);
+  --color-sidebar-text: #a1a1aa;
+  --color-sidebar-text-active: #fafafa;
+  --color-sidebar-text-muted: #52525b;
+  --color-sidebar-border: rgba(255,255,255,0.06);
+  --color-sidebar-section: #52525b;
+
+  --color-success: #10b981;
+  --color-success-muted: rgba(16, 185, 129, 0.12);
+  --color-success-muted-border: rgba(16, 185, 129, 0.25);
+  --color-warning: #f59e0b;
+  --color-warning-muted: rgba(245, 158, 11, 0.12);
+  --color-warning-muted-border: rgba(245, 158, 11, 0.25);
+  --color-danger: #ef4444;
+  --color-danger-muted: rgba(239, 68, 68, 0.12);
+  --color-danger-muted-border: rgba(239, 68, 68, 0.25);
+  --color-info: #3b82f6;
+  --color-info-muted: rgba(59, 130, 246, 0.12);
+  --color-info-muted-border: rgba(59, 130, 246, 0.25);
+
+  --color-priority-high: #ef4444;
+  --color-priority-medium: #f59e0b;
+  --color-priority-low: #3b82f6;
+
+  --color-status-open-bg: rgba(59, 130, 246, 0.12);
+  --color-status-open-border: rgba(59, 130, 246, 0.25);
+  --color-status-open-text: #60a5fa;
+  --color-status-inprogress-bg: rgba(245, 158, 11, 0.12);
+  --color-status-inprogress-border: rgba(245, 158, 11, 0.25);
+  --color-status-inprogress-text: #fbbf24;
+  --color-status-done-bg: rgba(16, 185, 129, 0.12);
+  --color-status-done-border: rgba(16, 185, 129, 0.25);
+  --color-status-done-text: #34d399;
+  --color-status-cancelled-bg: rgba(113, 113, 122, 0.12);
+  --color-status-cancelled-border: rgba(113, 113, 122, 0.25);
+  --color-status-cancelled-text: #a1a1aa;
+
+  --color-type-activity-bg: rgba(59,130,246,0.12);   --color-type-activity-text: #60a5fa;
+  --color-type-sleep-bg: rgba(139,92,246,0.12);      --color-type-sleep-text: #a78bfa;
+  --color-type-food-bg: rgba(245,158,11,0.12);       --color-type-food-text: #fbbf24;
+  --color-type-thought-bg: rgba(249,115,22,0.12);    --color-type-thought-text: #fb923c;
+  --color-type-idea-bg: rgba(236,72,153,0.12);       --color-type-idea-text: #f472b6;
+  --color-type-todo-bg: rgba(59,130,246,0.12);       --color-type-todo-text: #60a5fa;
+  --color-type-goal-bg: rgba(16,185,129,0.12);       --color-type-goal-text: #34d399;
+  --color-type-note-bg: rgba(113,113,122,0.12);      --color-type-note-text: #a1a1aa;
+  --color-type-chat-bg: rgba(16,185,129,0.12);       --color-type-chat-text: #34d399;
+
+  --color-input-bg: #18181b;
+  --color-input-border: #3f3f46;
+  --color-input-focus-ring: #3b82f6;
+}
+
+/* ===== BASE STYLES ===== */
+html {
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+}
+
+/* Hide scrollbars by default */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+/* Opt-in scrollbar class */
+.scrollbar::-webkit-scrollbar { display: block; width: 6px; height: 6px; }
+.scrollbar::-webkit-scrollbar-track { background: transparent; }
+.scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 3px;
+}
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+/* Focus ring utility */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
