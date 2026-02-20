@@ -12,6 +12,9 @@ const ProjectsPage = lazy(() => import("@/pages/projects/ProjectsPage"));
 const CapturePage = lazy(() => import("@/pages/capture/CapturePage"));
 const InboxPage = lazy(() => import("@/pages/inbox/InboxPage"));
 const TimelinePage = lazy(() => import("@/pages/timeline/TimelinePage"));
+const ThoughtsPage = lazy(() => import("@/pages/thoughts/ThoughtsPage"));
+const IdeasPage = lazy(() => import("@/pages/ideas/IdeasPage"));
+const CardsPage = lazy(() => import("@/pages/cards/CardsPage"));
 const ChatPage = lazy(() => import("@/pages/chat/ChatPage"));
 const ImprovementsPage = lazy(
   () => import("@/pages/improvements/ImprovementsPage"),
@@ -66,6 +69,9 @@ export function App() {
             <Route path="/capture" element={<CapturePage />} />
             <Route path="/inbox" element={<InboxPage />} />
             <Route path="/timeline" element={<TimelinePage />} />
+            <Route path="/thoughts" element={<ThoughtsPage />} />
+            <Route path="/ideas" element={<IdeasPage />} />
+            <Route path="/cards" element={<CardsPage />} />
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/improvements" element={<ImprovementsPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />

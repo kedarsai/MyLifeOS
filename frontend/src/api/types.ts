@@ -157,18 +157,100 @@ export interface SearchResponse {
 
 // --- Chat ---
 export interface ChatThread {
-  id: string;
+  thread_id: string;
   title: string;
   goal_id: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
   created_at: string;
   updated_at: string;
 }
 export interface ChatMessage {
-  id: string;
+  message_id: string;
   thread_id: string;
   role: "system" | "user" | "assistant" | "tool";
   content: string;
+  proposed_actions: ProposedAction[] | null;
   created_at: string;
+}
+export interface ProposedAction {
+  action_type: string;
+  label: string;
+  params: Record<string, unknown>;
+  requires_confirmation: boolean;
+}
+
+// --- Thought Areas & Topics ---
+export interface ThoughtArea {
+  area_id: string;
+  name: string;
+  description: string;
+  topic_count: number;
+  created_at: string;
+  updated_at: string;
+}
+export interface ThoughtTopic {
+  topic_id: string;
+  area_id: string;
+  name: string;
+  description: string;
+  entry_count: number;
+  created_at: string;
+  updated_at: string;
+}
+export interface TopicDetail extends ThoughtTopic {
+  entries: { id: string; summary: string; type: string; created_at: string; tags: string[] }[];
+}
+export interface HeatmapCell {
+  area_id: string;
+  area_name: string;
+  month: string;
+  entry_count: number;
+}
+
+// --- Ideas ---
+export type IdeaStatus = "raw" | "exploring" | "mature" | "converted" | "parked" | "dropped";
+export interface Idea {
+  idea_id: string;
+  logical_id: string;
+  title: string;
+  description: string;
+  status: IdeaStatus;
+  converted_to_type: string | null;
+  converted_to_id: string | null;
+  source_entry_id: string | null;
+  entry_count: number;
+  version_no: number;
+  created_at: string;
+  updated_at: string;
+}
+export interface IdeaDetail extends Idea {
+  entries: { id: string; summary: string; type: string; created_at: string; link_type: string; note: string }[];
+}
+export interface EntryDetail extends Entry {
+  details_md: string;
+  actions_md: string;
+}
+export interface IdeaConvertResult {
+  idea: Idea;
+  converted_to_type: string;
+  converted_to_id: string;
+}
+
+// --- Insight Cards ---
+export interface InsightCard {
+  card_id: string;
+  logical_id: string;
+  entity_type: string;
+  entity_id: string;
+  source_thread_id: string | null;
+  title: string;
+  body_md: string;
+  action_taken: string | null;
+  tags: string[];
+  version_no: number;
+  created_at: string;
+  updated_at: string;
 }
 
 // --- Improvements ---

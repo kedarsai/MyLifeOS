@@ -10,7 +10,7 @@ from app.api.form_utils import form_first, form_list, read_form_body
 from app.db.migrations import apply_sql_migrations
 from app.services.capture_batch import parse_batch_capture_text
 from app.services.capture import capture_entry
-from app.services.entries import process_inbox_entries, query_entries
+from app.services.entries import get_entry, process_inbox_entries, query_entries
 from app.services.indexer import VaultIndexer
 from app.vault.manager import VaultManager
 from app.ui.templating import render, wants_html
@@ -342,3 +342,13 @@ def list_timeline(
             pager_base=pager_base,
         ))
     return response
+
+
+@router.get("/{entry_id}", response_model=None)
+def entry_detail(request: Request, entry_id: str) -> Any:
+    settings = request.app.state.settings
+    apply_sql_migrations(_project_root(), settings)
+    item = get_entry(settings, entry_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Entry not found.")
+    return item

@@ -26,3 +26,14 @@ data/
 dist/
 build/
 *.egg-info/
+
+# Claude Code
+.claude/
+
+# Logs
+*.log
+*.err.log
+*.out.log
+
+# Frontend build info
+frontend/tsconfig.tsbuildinfo

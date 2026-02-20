@@ -1,4 +1,7 @@
+import { MessageSquare } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useGoalDashboard } from "@/api/hooks/useGoals";
 import { formatDate } from "@/lib/formatters";
@@ -22,6 +25,7 @@ function StatItem({ label, value }: { label: string; value: string }) {
 }
 
 export function GoalDashboardPanel({ goalId, onClose }: GoalDashboardProps) {
+  const navigate = useNavigate();
   const { data, isLoading, error } = useGoalDashboard(goalId);
 
   if (isLoading) {
@@ -58,12 +62,22 @@ export function GoalDashboardPanel({ goalId, onClose }: GoalDashboardProps) {
             {goal.end_date ? ` \u2014 ${formatDate(goal.end_date)}` : ""}
           </p>
         </div>
-        <button
-          onClick={onClose}
-          className="text-[12px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] cursor-pointer"
-        >
-          Close
-        </button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate(`/chat?entity_type=goal&entity_id=${goalId}`)}
+          >
+            <MessageSquare className="h-3.5 w-3.5 mr-1" />
+            Chat
+          </Button>
+          <button
+            onClick={onClose}
+            className="text-[12px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
       </div>
 
       {/* Metric grid */}

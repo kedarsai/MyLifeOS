@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../client";
 import type {
+  EntryDetail,
   InboxResponse,
   TimelineResponse,
   CaptureResponse,
@@ -88,6 +89,36 @@ export function useProcessInbox() {
       void qc.invalidateQueries({ queryKey: ["timeline"] });
       void qc.invalidateQueries({ queryKey: ["tasks"] });
       void qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useEntry(entryId: string | null) {
+  return useQuery<EntryDetail>({
+    queryKey: ["entries", entryId],
+    queryFn: () => apiFetch(`/entries/${entryId}`),
+    enabled: !!entryId,
+  });
+}
+
+export function useUpdateEntryNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      ideaId,
+      entryId,
+      note,
+    }: {
+      ideaId: string;
+      entryId: string;
+      note: string;
+    }) =>
+      apiFetch<{ ok: boolean }>(`/ideas/${ideaId}/entries/${entryId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ note }),
+      }),
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({ queryKey: ["ideas", vars.ideaId] });
     },
   });
 }

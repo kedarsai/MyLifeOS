@@ -11,7 +11,7 @@ uv sync --extra dev
 # Run backend server (dev)
 uv run uvicorn app.main:app --reload --port 8000
 
-# Run all tests (42 tests)
+# Run all tests (67 tests)
 uv run pytest
 
 # Run a single test file
@@ -97,7 +97,11 @@ Entries are stored as markdown files in `Vault/entries/YYYY/YYYY-MM/` with YAML 
 
 ### Migrations
 
-SQL files in `migrations/` (e.g., `0001_lifeos_v2.sql`). Applied in alphabetical order on startup. Tracked in `schema_migrations` table with SHA256 checksums — modifying an applied migration will error.
+SQL files in `migrations/` (e.g., `0001_lifeos_v2.sql`). Applied in alphabetical order on startup. Tracked in `schema_migrations` table with SHA256 checksums — modifying an applied migration will error. Current migrations:
+- `0001_lifeos_v2.sql` — Core tables (entries_index, goals, observations, tasks, improvements, etc.)
+- `0002_projects_tasks.sql` — Projects table and task project linking
+- `0003_thoughts_ideas_cards.sql` — Thought areas/topics, ideas/idea_entries, insight cards
+- `0004_idea_entry_notes.sql` — Adds `note` column to idea_entries
 
 ### UI page rendering (legacy HTMX)
 

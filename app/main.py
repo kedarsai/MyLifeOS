@@ -19,6 +19,9 @@ from app.api.routes_reviews import router as reviews_router
 from app.api.routes_runs import router as runs_router
 from app.api.routes_search import router as search_router
 from app.api.routes_tasks import tasks_router, today_router
+from app.api.routes_thoughts import router as thoughts_router
+from app.api.routes_ideas import router as ideas_router
+from app.api.routes_cards import router as cards_router
 from app.core.config import get_settings
 from app.db.migrations import apply_sql_migrations
 from app.services.prompts import ensure_default_prompt_assets, load_prompt_templates
@@ -59,6 +62,9 @@ def create_app() -> FastAPI:
     app.include_router(tasks_router)
     app.include_router(today_router)
     app.include_router(conflicts_router)
+    app.include_router(thoughts_router)
+    app.include_router(ideas_router)
+    app.include_router(cards_router)
     app.include_router(ui_router)
 
     # --- SPA catch-all (only when frontend/dist exists) ---

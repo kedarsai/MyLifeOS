@@ -377,6 +377,8 @@ def _fallback_ingest_output(
         "needs_followup": needs_followup,
         "followup_questions": followups[:8],
         "confidence": 0.55,
+        "topic_assignments": [],
+        "idea_links": [],
         "_meta_created_at": created_at,
     }
 
@@ -392,6 +394,8 @@ def _prepare_ingest_output(
     goals_context: list[dict[str, Any]],
     goal_ids: set[str],
     projects_context: list[dict[str, Any]],
+    topics_ctx: list[dict[str, Any]] | None = None,
+    ideas_ctx: list[dict[str, Any]] | None = None,
 ) -> tuple[dict[str, Any], bool, str | None]:
     fallback_output = _fallback_ingest_output(
         raw_text=raw_text,
@@ -416,6 +420,8 @@ def _prepare_ingest_output(
                 "existing_tags_json": _json_dump(existing_tags),
                 "goals_context_json": _json_dump(goals_context),
                 "projects_context_json": _json_dump(projects_context),
+                "topics_context_json": _json_dump(topics_ctx or []),
+                "ideas_context_json": _json_dump(ideas_ctx or []),
                 "created_at": created_at,
             },
         )
@@ -489,6 +495,39 @@ def _should_create_improvement(raw_text: str, output: dict[str, Any]) -> bool:
         return True
     text = raw_text.lower()
     return "improve" in text or "could be better" in text or "need to fix" in text
+
+
+def get_entry(settings, entry_id: str) -> dict[str, Any] | None:
+    conn = get_connection(settings)
+    try:
+        row = conn.execute(
+            """
+            SELECT id, path, created_at, updated_at, type, status,
+                   summary, raw_text, details_md, actions_md,
+                   tags_json, goals_json
+            FROM entries_index
+            WHERE id = ?
+            """,
+            (entry_id,),
+        ).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        return None
+    return {
+        "id": row["id"],
+        "path": row["path"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+        "type": row["type"],
+        "status": row["status"],
+        "summary": row["summary"] or "",
+        "raw_text": row["raw_text"] or "",
+        "details_md": row["details_md"] or "",
+        "actions_md": row["actions_md"] or "",
+        "tags": _json_array(row["tags_json"]),
+        "goals": _json_array(row["goals_json"]),
+    }
 
 
 def query_entries(
@@ -624,6 +663,10 @@ def process_inbox_entries(
     now_iso = utc_now_iso()
     goals_context, goal_ids = _goal_context(settings)
     projects_context, project_ids = _project_context(settings)
+    from app.services.topics import topics_context as _topics_context
+    from app.services.ideas import ideas_context as _ideas_context
+    topics_ctx = _topics_context(settings)
+    ideas_ctx = _ideas_context(settings)
     updated_paths: list[Path] = []
     processed_ids: list[str] = []
     failed_ids: list[str] = []
@@ -655,6 +698,8 @@ def process_inbox_entries(
             goals_context=goals_context,
             goal_ids=goal_ids,
             projects_context=projects_context,
+            topics_ctx=topics_ctx,
+            ideas_ctx=ideas_ctx,
         )
 
         parse_ok, schema_error = validate_prompt_output_schema(
@@ -801,6 +846,28 @@ def process_inbox_entries(
                     status="open",
                 )
                 improvements_created += 1
+
+        # Process topic assignments (for thought entries)
+        topic_assignments = output.get("topic_assignments") or []
+        if topic_assignments and isinstance(topic_assignments, list):
+            from app.services.topics import process_topic_assignments
+            process_topic_assignments(
+                settings,
+                entry_id=entry_id,
+                source_run_id=recorded_run_id,
+                assignments=topic_assignments,
+            )
+
+        # Process idea links
+        idea_links = output.get("idea_links") or []
+        if idea_links and isinstance(idea_links, list):
+            from app.services.ideas import process_idea_links
+            process_idea_links(
+                settings,
+                entry_id=entry_id,
+                source_run_id=recorded_run_id,
+                links=idea_links,
+            )
 
     if updated_paths:
         VaultIndexer(settings).index_paths(updated_paths)

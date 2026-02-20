@@ -24,6 +24,8 @@ CHAT_DISTILL_PROMPT_ID = "chat_distill_outcomes"
 CHAT_DISTILL_PROMPT_VERSION = "v1"
 WEEKLY_REVIEW_PROMPT_ID = "weekly_goal_review"
 WEEKLY_REVIEW_PROMPT_VERSION = "v1"
+ENTITY_CHAT_PROMPT_ID = "entity_chat_response"
+ENTITY_CHAT_PROMPT_VERSION = "v1"
 
 # Backward compatibility for existing imports.
 DEFAULT_PROMPT_ID = INGEST_PROMPT_ID
@@ -107,6 +109,36 @@ user: |
   {{messages_json}}
 """
 
+DEFAULT_ENTITY_CHAT_PROMPT_TEXT = """id: entity_chat_response
+version: v1
+provider: openai
+model: gpt-5.2
+params:
+  reasoning_effort: none
+  temperature: 0.3
+  verbosity: medium
+  max_output_tokens: 3000
+schema: schemas/entity_chat_response.json
+system: |
+  You are a knowledge coach. You help users think through their ideas,
+  explore thought topics, and make progress on goals.
+  Use provided entity context, insight cards, and recent entries.
+  Give specific, actionable responses tied to the user's data.
+  When appropriate, suggest concrete actions via proposed_actions.
+  All write actions must have requires_confirmation: true.
+  Available action_type values: create_task, create_improvement, save_card,
+  update_idea_status, convert_idea.
+user: |
+  Entity context:
+  {{entity_context_json}}
+
+  Recent insight cards:
+  {{cards_context_json}}
+
+  Conversation messages:
+  {{messages_json}}
+"""
+
 DEFAULT_WEEKLY_REVIEW_PROMPT_TEXT = """id: weekly_goal_review
 version: v1
 provider: openai
@@ -151,12 +183,14 @@ def ensure_default_prompt_assets(settings) -> None:
     _ensure_schema_from_repo(schema_dir, target_name="goal_chat_response.json", source_name="goal_chat_response.json")
     _ensure_schema_from_repo(schema_dir, target_name="chat_distill_outcomes.json", source_name="distill_outcomes.json")
     _ensure_schema_from_repo(schema_dir, target_name="weekly_goal_review.json", source_name="weekly_goal_review.json")
+    _ensure_schema_from_repo(schema_dir, target_name="entity_chat_response.json", source_name="entity_chat_response.json")
 
     assets = [
         (base / "ingest_extract.yaml", DEFAULT_INGEST_PROMPT_TEXT),
         (base / "goal_chat_response.yaml", DEFAULT_CHAT_RESPONSE_PROMPT_TEXT),
         (base / "chat_distill_outcomes.yaml", DEFAULT_CHAT_DISTILL_PROMPT_TEXT),
         (base / "weekly_goal_review.yaml", DEFAULT_WEEKLY_REVIEW_PROMPT_TEXT),
+        (base / "entity_chat_response.yaml", DEFAULT_ENTITY_CHAT_PROMPT_TEXT),
     ]
     for path, text in assets:
         if not path.exists():

@@ -16,6 +16,10 @@ from app.services.prompts import (
     CHAT_DISTILL_PROMPT_VERSION,
     CHAT_RESPONSE_PROMPT_ID,
     CHAT_RESPONSE_PROMPT_VERSION,
+    ENTITY_CHAT_PROMPT_ID,
+    ENTITY_CHAT_PROMPT_VERSION,
+    ensure_default_prompt_assets,
+    load_prompt_templates,
 )
 from app.services.runs import record_prompt_run
 from app.services.schema_validation import validate_prompt_output_schema
@@ -70,10 +74,24 @@ def _write_thread_markdown(settings, thread: dict[str, Any], messages: list[dict
     manager.atomic_write_text(_thread_markdown_path(settings, thread["thread_id"]), text)
 
 
-def create_chat_thread(settings, *, title: str, goal_id: str | None = None) -> dict[str, Any]:
+def create_chat_thread(
+    settings,
+    *,
+    title: str,
+    goal_id: str | None = None,
+    entity_type: str | None = None,
+    entity_id: str | None = None,
+) -> dict[str, Any]:
     now = utc_now_iso()
     thread_id = f"chat-{uuid.uuid4()}"
     run_id = f"manual-{uuid.uuid4()}"
+    # Backward compat: if goal_id is set but entity_type is not, auto-fill
+    if goal_id and not entity_type:
+        entity_type = "goal"
+        entity_id = goal_id
+    # Forward compat: if entity_type is goal, also set goal_id
+    if entity_type == "goal" and entity_id and not goal_id:
+        goal_id = entity_id
     conn = get_connection(settings)
     try:
         _ensure_run(conn, run_id)
@@ -81,9 +99,10 @@ def create_chat_thread(settings, *, title: str, goal_id: str | None = None) -> d
             """
             INSERT INTO chat_threads (
               thread_id, logical_id, path, source_run_id, goal_id, title,
+              entity_type, entity_id,
               version_no, is_current, supersedes_id, created_at, updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, 1, 1, NULL, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1, NULL, ?, ?)
             """,
             (
                 thread_id,
@@ -92,6 +111,8 @@ def create_chat_thread(settings, *, title: str, goal_id: str | None = None) -> d
                 run_id,
                 goal_id,
                 title.strip(),
+                entity_type,
+                entity_id,
                 now,
                 now,
             ),
@@ -112,6 +133,7 @@ def get_chat_thread(settings, thread_id: str) -> dict[str, Any] | None:
         row = conn.execute(
             """
             SELECT thread_id, logical_id, path, source_run_id, goal_id, title,
+                   entity_type, entity_id,
                    version_no, is_current, supersedes_id, created_at, updated_at
             FROM chat_threads
             WHERE thread_id = ?
@@ -129,6 +151,8 @@ def get_chat_thread(settings, thread_id: str) -> dict[str, Any] | None:
         "source_run_id": row["source_run_id"],
         "goal_id": row["goal_id"],
         "title": row["title"],
+        "entity_type": row["entity_type"],
+        "entity_id": row["entity_id"],
         "version_no": int(row["version_no"]),
         "is_current": bool(row["is_current"]),
         "supersedes_id": row["supersedes_id"],
@@ -137,22 +161,34 @@ def get_chat_thread(settings, thread_id: str) -> dict[str, Any] | None:
     }
 
 
-def list_chat_threads(settings, *, goal_id: str | None = None) -> list[dict[str, Any]]:
+def list_chat_threads(
+    settings,
+    *,
+    goal_id: str | None = None,
+    entity_type: str | None = None,
+    entity_id: str | None = None,
+) -> list[dict[str, Any]]:
     where = "WHERE is_current = 1"
-    params: tuple[Any, ...] = ()
+    params: list[Any] = []
     if goal_id:
         where += " AND goal_id = ?"
-        params = (goal_id,)
+        params.append(goal_id)
+    if entity_type:
+        where += " AND entity_type = ?"
+        params.append(entity_type)
+    if entity_id:
+        where += " AND entity_id = ?"
+        params.append(entity_id)
     conn = get_connection(settings)
     try:
         rows = conn.execute(
             f"""
-            SELECT thread_id, goal_id, title, created_at, updated_at
+            SELECT thread_id, goal_id, title, entity_type, entity_id, created_at, updated_at
             FROM chat_threads
             {where}
             ORDER BY updated_at DESC, thread_id DESC
             """,
-            params,
+            tuple(params),
         ).fetchall()
     finally:
         conn.close()
@@ -161,6 +197,8 @@ def list_chat_threads(settings, *, goal_id: str | None = None) -> list[dict[str,
             "thread_id": row["thread_id"],
             "goal_id": row["goal_id"],
             "title": row["title"],
+            "entity_type": row["entity_type"],
+            "entity_id": row["entity_id"],
             "created_at": row["created_at"],
             "updated_at": row["updated_at"],
         }
@@ -173,7 +211,8 @@ def list_chat_messages(settings, *, thread_id: str) -> list[dict[str, Any]]:
     try:
         rows = conn.execute(
             """
-            SELECT message_id, thread_id, role, content, source_run_id, created_at
+            SELECT message_id, thread_id, role, content, source_run_id,
+                   proposed_actions_json, created_at
             FROM chat_messages
             WHERE thread_id = ?
             ORDER BY created_at ASC, message_id ASC
@@ -189,6 +228,7 @@ def list_chat_messages(settings, *, thread_id: str) -> list[dict[str, Any]]:
             "role": row["role"],
             "content": row["content"],
             "source_run_id": row["source_run_id"],
+            "proposed_actions": json.loads(row["proposed_actions_json"]) if row["proposed_actions_json"] else None,
             "created_at": row["created_at"],
         }
         for row in rows
@@ -202,6 +242,7 @@ def add_chat_message(
     role: str,
     content: str,
     source_run_id: str | None = None,
+    proposed_actions_json: str | None = None,
 ) -> dict[str, Any]:
     now = utc_now_iso()
     run_id = source_run_id or f"manual-{uuid.uuid4()}"
@@ -214,10 +255,11 @@ def add_chat_message(
         _ensure_run(conn, run_id)
         conn.execute(
             """
-            INSERT INTO chat_messages (message_id, thread_id, role, content, source_run_id, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO chat_messages (message_id, thread_id, role, content, source_run_id,
+                                       proposed_actions_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (message_id, thread_id, role, content.strip(), run_id, now),
+            (message_id, thread_id, role, content.strip(), run_id, proposed_actions_json, now),
         )
         conn.execute(
             "UPDATE chat_threads SET updated_at = ? WHERE thread_id = ?",
@@ -461,7 +503,56 @@ def _fallback_distill_output(*, thread: dict[str, Any], messages: list[dict[str,
     }
 
 
+def build_entity_chat_context(
+    settings,
+    *,
+    entity_type: str | None = None,
+    entity_id: str | None = None,
+) -> dict[str, Any]:
+    if not entity_type or not entity_id:
+        return {"entity": None, "recent_entries": [], "cards": []}
+    if entity_type == "goal":
+        return build_chat_context(settings, goal_id=entity_id)
+    if entity_type == "thought_topic":
+        from app.services.topics import get_topic_detail
+        from app.services.cards import cards_for_context
+        detail = get_topic_detail(settings, entity_id)
+        cards = cards_for_context(settings, entity_type=entity_type, entity_id=entity_id)
+        return {"entity": detail, "recent_entries": (detail or {}).get("entries", [])[:10], "cards": cards}
+    if entity_type == "idea":
+        from app.services.ideas import get_idea_detail
+        from app.services.cards import cards_for_context
+        detail = get_idea_detail(settings, entity_id)
+        cards = cards_for_context(settings, entity_type=entity_type, entity_id=entity_id)
+        return {"entity": detail, "recent_entries": (detail or {}).get("entries", [])[:10], "cards": cards}
+    return {"entity": None, "recent_entries": [], "cards": []}
+
+
+def _fallback_entity_chat_response(
+    *,
+    thread: dict[str, Any],
+    messages: list[dict[str, Any]],
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    assistant = (
+        "Based on your current context, consider what's most important right now. "
+        "What concrete step could you take today?"
+    )
+    return {
+        "assistant_message": assistant,
+        "referenced_data_points": [],
+        "detected_gaps": [],
+        "proposed_actions": [],
+        "needs_followup": False,
+        "followup_questions": [],
+        "confidence": 0.55,
+    }
+
+
 def generate_thread_reply(settings, *, thread_id: str) -> dict[str, Any]:
+    ensure_default_prompt_assets(settings)
+    load_prompt_templates(settings)
+
     thread = get_chat_thread(settings, thread_id)
     if not thread:
         raise KeyError("Thread not found.")
@@ -469,24 +560,46 @@ def generate_thread_reply(settings, *, thread_id: str) -> dict[str, Any]:
     if not messages:
         raise ValueError("Thread has no messages.")
 
-    context = build_chat_context(settings, goal_id=thread.get("goal_id"))
-    fallback_output = _fallback_chat_response(thread=thread, messages=messages, context=context)
+    # Determine which prompt to use based on entity_type
+    et = thread.get("entity_type")
+    use_entity_prompt = et in ("thought_topic", "idea")
+
+    if use_entity_prompt:
+        context = build_entity_chat_context(settings, entity_type=et, entity_id=thread.get("entity_id"))
+        fallback_output = _fallback_entity_chat_response(thread=thread, messages=messages, context=context)
+        prompt_id = ENTITY_CHAT_PROMPT_ID
+        prompt_version = ENTITY_CHAT_PROMPT_VERSION
+        llm_variables = {
+            "entity_context_json": _json_dump(context, {}),
+            "cards_context_json": _json_dump(context.get("cards", []), []),
+            "messages_json": _json_dump(
+                [{"message_id": m["message_id"], "role": m["role"], "content": m["content"]} for m in messages[-30:]],
+                [],
+            ),
+        }
+    else:
+        context = build_chat_context(settings, goal_id=thread.get("goal_id"))
+        fallback_output = _fallback_chat_response(thread=thread, messages=messages, context=context)
+        prompt_id = CHAT_RESPONSE_PROMPT_ID
+        prompt_version = CHAT_RESPONSE_PROMPT_VERSION
+        llm_variables = {
+            "goal_context_json": _json_dump(context, {}),
+            "messages_json": _json_dump(
+                [{"message_id": m["message_id"], "role": m["role"], "content": m["content"]} for m in messages[-30:]],
+                [],
+            ),
+        }
+
     llm_error: str | None = None
     used_fallback = False
     output: dict[str, Any]
     try:
         output = run_openai_json_prompt(
             settings,
-            prompt_id=CHAT_RESPONSE_PROMPT_ID,
-            prompt_version=CHAT_RESPONSE_PROMPT_VERSION,
+            prompt_id=prompt_id,
+            prompt_version=prompt_version,
             model_override=settings.model_analysis,
-            variables={
-                "goal_context_json": _json_dump(context, {}),
-                "messages_json": _json_dump(
-                    [{"message_id": m["message_id"], "role": m["role"], "content": m["content"]} for m in messages[-30:]],
-                    [],
-                ),
-            },
+            variables=llm_variables,
         )
     except Exception as exc:
         used_fallback = True
@@ -495,8 +608,8 @@ def generate_thread_reply(settings, *, thread_id: str) -> dict[str, Any]:
 
     parse_ok, schema_error = validate_prompt_output_schema(
         settings,
-        prompt_id=CHAT_RESPONSE_PROMPT_ID,
-        prompt_version=CHAT_RESPONSE_PROMPT_VERSION,
+        prompt_id=prompt_id,
+        prompt_version=prompt_version,
         output=output,
     )
     if not parse_ok:
@@ -504,8 +617,8 @@ def generate_thread_reply(settings, *, thread_id: str) -> dict[str, Any]:
         output = fallback_output
         parse_ok, schema_error = validate_prompt_output_schema(
             settings,
-            prompt_id=CHAT_RESPONSE_PROMPT_ID,
-            prompt_version=CHAT_RESPONSE_PROMPT_VERSION,
+            prompt_id=prompt_id,
+            prompt_version=prompt_version,
             output=output,
         )
 
@@ -516,8 +629,8 @@ def generate_thread_reply(settings, *, thread_id: str) -> dict[str, Any]:
         run_error = f"{run_error} | llm: {llm_error}" if run_error else f"llm: {llm_error}"
     run_id = record_prompt_run(
         settings,
-        prompt_id=CHAT_RESPONSE_PROMPT_ID,
-        prompt_version=CHAT_RESPONSE_PROMPT_VERSION,
+        prompt_id=prompt_id,
+        prompt_version=prompt_version,
         model=settings.model_analysis,
         status="success" if parse_ok else "failed",
         input_refs=[thread_id],
@@ -535,51 +648,60 @@ def generate_thread_reply(settings, *, thread_id: str) -> dict[str, Any]:
     if not assistant_text:
         raise ValueError("Chat reply output did not include assistant_message.")
 
+    # Store proposed_actions in the message
+    proposed_actions = output.get("proposed_actions") if isinstance(output.get("proposed_actions"), list) else None
+    proposed_actions_json = _json_dump(proposed_actions, None) if proposed_actions else None
+
     saved = add_chat_message(
         settings,
         thread_id=thread_id,
         role="assistant",
         content=assistant_text,
         source_run_id=run_id,
+        proposed_actions_json=proposed_actions_json,
     )
 
-    actions_md = _action_lines(output.get("suggested_actions"))
     task_count = 0
-    if actions_md != "-":
-        task_sync = sync_tasks_from_actions(
-            settings,
-            entry_id=f"chat-thread-{thread_id}",
-            source_run_id=run_id,
-            actions_md=actions_md,
-            goal_id=thread.get("goal_id"),
-        )
-        task_count = int(task_sync["created"]) + int(task_sync["updated"])
-
     improvements_created = 0
-    improvements = output.get("recommended_improvements") if isinstance(output.get("recommended_improvements"), list) else []
-    for item in improvements[:2]:
-        if not isinstance(item, dict):
-            continue
-        title = str(item.get("title") or "").strip()
-        rationale = str(item.get("rationale") or "").strip()
-        if not title or not rationale:
-            continue
-        create_improvement(
-            settings,
-            title=title[:180],
-            rationale=rationale[:760],
-            source_entry_id=None,
-            source_run_id=run_id,
-            goal_id=thread.get("goal_id"),
-            status="open",
-        )
-        improvements_created += 1
+
+    if not use_entity_prompt:
+        # Goal chat: process suggested_actions and recommended_improvements
+        actions_md = _action_lines(output.get("suggested_actions"))
+        if actions_md != "-":
+            task_sync = sync_tasks_from_actions(
+                settings,
+                entry_id=f"chat-thread-{thread_id}",
+                source_run_id=run_id,
+                actions_md=actions_md,
+                goal_id=thread.get("goal_id"),
+            )
+            task_count = int(task_sync["created"]) + int(task_sync["updated"])
+
+        improvements = output.get("recommended_improvements") if isinstance(output.get("recommended_improvements"), list) else []
+        for item in improvements[:2]:
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("title") or "").strip()
+            rationale = str(item.get("rationale") or "").strip()
+            if not title or not rationale:
+                continue
+            create_improvement(
+                settings,
+                title=title[:180],
+                rationale=rationale[:760],
+                source_entry_id=None,
+                source_run_id=run_id,
+                goal_id=thread.get("goal_id"),
+                status="open",
+            )
+            improvements_created += 1
 
     return {
         "thread_id": thread_id,
         "source_run_id": run_id,
         "message_id": saved["message_id"],
         "assistant_message": saved["content"],
+        "proposed_actions": proposed_actions,
         "tasks_created_or_updated": task_count,
         "improvements_created": improvements_created,
         "used_fallback": used_fallback,
@@ -720,3 +842,109 @@ def distill_chat_outcomes(settings, *, thread_id: str) -> dict[str, Any]:
         "tasks_created_or_updated": task_count,
         "used_fallback": used_fallback,
     }
+
+
+def execute_proposed_action(
+    settings,
+    *,
+    thread_id: str,
+    action: dict[str, Any],
+) -> dict[str, Any]:
+    """Execute a confirmed proposed action from a chat message."""
+    action_type = str(action.get("action_type") or "").strip()
+    params = action.get("params") if isinstance(action.get("params"), dict) else {}
+    run_id = f"manual-{uuid.uuid4()}"
+
+    thread = get_chat_thread(settings, thread_id)
+    if not thread:
+        raise KeyError("Thread not found.")
+
+    # Ensure the run exists before any downstream writes
+    conn = get_connection(settings)
+    try:
+        _ensure_run(conn, run_id)
+        conn.commit()
+    finally:
+        conn.close()
+
+    result: dict[str, Any] = {"action_type": action_type, "success": False}
+
+    if action_type == "create_task":
+        title = str(params.get("title") or action.get("label") or "").strip()
+        if not title:
+            raise ValueError("Task title is required.")
+        actions_md = f"- [ ] {title}"
+        task_sync = sync_tasks_from_actions(
+            settings,
+            entry_id=f"chat-thread-{thread_id}",
+            source_run_id=run_id,
+            actions_md=actions_md,
+            goal_id=thread.get("goal_id"),
+        )
+        result["success"] = True
+        result["tasks_synced"] = task_sync
+
+    elif action_type == "create_improvement":
+        title = str(params.get("title") or action.get("label") or "").strip()
+        rationale = str(params.get("rationale") or "From chat conversation.").strip()
+        if not title:
+            raise ValueError("Improvement title is required.")
+        improvement = create_improvement(
+            settings,
+            title=title[:180],
+            rationale=rationale[:760],
+            source_entry_id=None,
+            source_run_id=run_id,
+            goal_id=thread.get("goal_id"),
+            status="open",
+        )
+        result["success"] = True
+        result["improvement_id"] = improvement["improvement_id"]
+
+    elif action_type == "save_card":
+        from app.services.cards import save_card
+        et = thread.get("entity_type")
+        eid = thread.get("entity_id")
+        if not et or not eid:
+            raise ValueError("Thread must be linked to an entity for save_card.")
+        title = str(params.get("title") or action.get("label") or "").strip()
+        body_md = str(params.get("body_md") or "").strip()
+        if not title or not body_md:
+            raise ValueError("Card title and body are required.")
+        card = save_card(
+            settings,
+            entity_type=et,
+            entity_id=eid,
+            title=title,
+            body_md=body_md,
+            source_run_id=run_id,
+            source_thread_id=thread_id,
+            tags=params.get("tags") if isinstance(params.get("tags"), list) else [],
+        )
+        result["success"] = True
+        result["card_id"] = card["card_id"]
+
+    elif action_type == "update_idea_status":
+        from app.services.ideas import update_idea
+        idea_id = str(params.get("idea_id") or thread.get("entity_id") or "").strip()
+        new_status = str(params.get("status") or "").strip()
+        if not idea_id or not new_status:
+            raise ValueError("idea_id and status are required.")
+        updated = update_idea(settings, idea_id, {"status": new_status})
+        result["success"] = updated is not None
+        result["idea"] = updated
+
+    elif action_type == "convert_idea":
+        from app.services.ideas import convert_idea
+        idea_id = str(params.get("idea_id") or thread.get("entity_id") or "").strip()
+        target_type = str(params.get("target_type") or "").strip()
+        if not idea_id or not target_type:
+            raise ValueError("idea_id and target_type are required.")
+        converted = convert_idea(settings, idea_id, target_type=target_type, extra=params)
+        result["success"] = True
+        result["conversion"] = converted
+
+    else:
+        raise ValueError(f"Unknown action_type: {action_type}")
+
+    return result

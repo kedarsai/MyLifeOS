@@ -12,7 +12,9 @@
     "tool_calls",
     "needs_followup",
     "followup_questions",
-    "confidence"
+    "confidence",
+    "topic_assignments",
+    "idea_links"
   ],
   "properties": {
     "entry_type": {
@@ -165,6 +167,33 @@
       "type": "array",
       "items": { "type": "string" }
     },
-    "confidence": { "type": "number" }
+    "confidence": { "type": "number" },
+    "topic_assignments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["area_name", "topic_name", "create_if_new"],
+        "properties": {
+          "area_name": { "type": "string" },
+          "topic_name": { "type": "string" },
+          "create_if_new": { "type": "boolean" }
+        }
+      }
+    },
+    "idea_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mode", "idea_id", "new_title", "new_description"],
+        "properties": {
+          "mode": { "type": "string", "enum": ["existing", "new"] },
+          "idea_id": { "type": ["string", "null"] },
+          "new_title": { "type": ["string", "null"] },
+          "new_description": { "type": ["string", "null"] }
+        }
+      }
+    }
   }
 }

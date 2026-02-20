@@ -14,6 +14,9 @@ import {
   Zap,
   Play,
   AlertTriangle,
+  Brain,
+  Lightbulb,
+  CreditCard,
 } from "lucide-react";
 
 export const NAV_GROUPS = [
@@ -33,6 +36,14 @@ export const NAV_GROUPS = [
       { path: "/capture", label: "Capture", icon: PenTool },
       { path: "/inbox", label: "Inbox", icon: Inbox },
       { path: "/timeline", label: "Timeline", icon: ArrowRight },
+    ],
+  },
+  {
+    label: "Knowledge",
+    items: [
+      { path: "/thoughts", label: "Thoughts", icon: Brain },
+      { path: "/ideas", label: "Ideas", icon: Lightbulb },
+      { path: "/cards", label: "Cards", icon: CreditCard },
     ],
   },
   {
