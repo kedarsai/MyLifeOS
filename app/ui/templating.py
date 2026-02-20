@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import calendar
 import re
 from datetime import datetime, timezone
+from itertools import groupby
 from pathlib import Path
 
 from fastapi import Request
@@ -55,9 +57,27 @@ def _snippet_to_html(snippet: str) -> str:
     return Markup(re.sub(r"\[(.*?)\]", r"<mark>\1</mark>", escaped))
 
 
+def _group_by_month(items: list) -> list:
+    """Group entries by YYYY-MM from created_at. Returns [(label, [items...]), ...]."""
+    def _month_key(item):
+        ca = item.get("created_at", "") if isinstance(item, dict) else getattr(item, "created_at", "")
+        return str(ca)[:7] if ca else "unknown"
+
+    result = []
+    for ym, group in groupby(items, key=_month_key):
+        try:
+            year, month = ym.split("-")
+            label = f"{calendar.month_name[int(month)]} {year}"
+        except (ValueError, IndexError):
+            label = ym
+        result.append((label, list(group)))
+    return result
+
+
 env.filters["time_ago"] = _time_ago
 env.filters["truncate_text"] = _truncate
 env.filters["snippet_html"] = _snippet_to_html
+env.filters["group_by_month"] = _group_by_month
 
 
 # --------------- shared layout constants ---------------

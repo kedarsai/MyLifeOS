@@ -1,9 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title }}</title>
+  <script>
+    (function(){var t=localStorage.getItem('lifeos-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t)}else{document.documentElement.removeAttribute('data-theme')}})();
+  </script>
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -15,6 +18,7 @@
         <p>Local-first assistant</p>
       </div>
       <button id="sidebar-toggle-btn" class="sidebar-toggle" type="button">&#9776; Toggle</button>
+      <button id="theme-toggle-btn" class="sidebar-toggle" type="button">&#9790; Dark mode</button>
       <nav class="nav">
         {% for section_name, links in nav_groups %}
         <details class="nav-group"{% if active in links|map(attribute=0)|list %} open{% endif %}>
@@ -55,6 +59,25 @@
       </div>
       {% block content %}{% endblock %}
     </main>
+  </div>
+  <!-- Cmd+K search modal -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-dialog">
+      <div class="search-modal-header">
+        <input id="search-modal-input"
+               type="text"
+               class="search-modal-input"
+               placeholder="Search entries..."
+               autocomplete="off"
+               hx-get="/api/search?format=html"
+               hx-trigger="keyup changed delay:300ms"
+               hx-target="#search-modal-results"
+               hx-swap="innerHTML"
+               name="q">
+        <kbd class="search-modal-kbd">Esc</kbd>
+      </div>
+      <div id="search-modal-results" class="search-modal-results"></div>
+    </div>
   </div>
   <script src="/static/app.js"></script>
   {% block extra_scripts %}{% endblock %}
